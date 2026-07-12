@@ -32,6 +32,8 @@ debug_output.txt
 # Logs
 logs/
 *.log
+*log.txt
+*output.txt
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*

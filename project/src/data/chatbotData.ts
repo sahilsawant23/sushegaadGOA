@@ -2,7 +2,7 @@ import { QuickReply } from '../types/chatbot';
 import { mockTours } from './mockTours';
 import { goaBeaches } from './beachesData';
 
-export const welcomeMessage = "🏖️ Welcome to GoaExplorer! I'm your AI travel assistant. I can help you discover amazing tours, beautiful beaches, and plan your perfect Goa adventure. How can I assist you today?";
+export const welcomeMessage = "🏖️ Welcome to GoaExplorer! I'm your travel support assistant. I can help you discover amazing tours, beautiful beaches, and plan your perfect Goa adventure. How can I assist you today?";
 
 export const quickReplies: QuickReply[] = [
   { id: 'tours', text: '🎯 Find Tours', action: 'show_tours' },
