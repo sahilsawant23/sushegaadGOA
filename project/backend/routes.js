@@ -452,9 +452,15 @@ router.post('/bookings', authenticateToken, async (req, res) => {
   try {
     const conn = await getConnection();
 
-    // Fetch tour title for snapshot
-    const [tours] = await conn.execute('SELECT title, destination_id FROM tours WHERE id = ?', [tourId]);
-    const tourTitle = tours.length > 0 ? tours[0].title : 'Unknown Tour';
+    // Fetch tour/place title for snapshot
+    let tourTitle = 'Unknown Booking';
+    if (String(tourId).startsWith('osm-')) {
+      const [places] = await conn.execute('SELECT name FROM realtime_places_cache WHERE id = ?', [tourId]);
+      tourTitle = places.length > 0 ? places[0].name : 'Live Place Reservation';
+    } else {
+      const [tours] = await conn.execute('SELECT title, destination_id FROM tours WHERE id = ?', [tourId]);
+      tourTitle = tours.length > 0 ? tours[0].title : 'Unknown Tour';
+    }
 
     // Fetch user details for email
     const [users] = await conn.execute('SELECT full_name, email FROM users WHERE id = ?', [req.user.userId]);
@@ -462,7 +468,7 @@ router.post('/bookings', authenticateToken, async (req, res) => {
 
     const [result] = await conn.execute(
       'INSERT INTO bookings (user_id, tour_id, booking_date, total_price, guests, booked_tour_title) VALUES (?, ?, ?, ?, ?, ?)',
-      [req.user.userId, tourId, bookingDate, totalPrice, guests || 1, tourTitle]
+      [req.user.userId, String(tourId), bookingDate, totalPrice, guests || 1, tourTitle]
     );
 
     // Send email asynchronously (fire and forget)
@@ -493,14 +499,17 @@ router.get('/bookings', authenticateToken, async (req, res) => {
     const conn = await getConnection();
     const [rows] = await conn.execute(`
       SELECT b.*, 
-             COALESCE(b.booked_tour_title, t.title, 'Tour Details Unavailable') as tour_title, 
-             t.image_url, t.description as tour_description, t.duration_hours,
-             d.name as location,
+             COALESCE(b.booked_tour_title, t.title, p.name, 'Booking Details Unavailable') as tour_title, 
+             COALESCE(t.image_url, p.image, '') as image_url, 
+             COALESCE(t.description, p.description, '') as tour_description, 
+             t.duration_hours,
+             COALESCE(d.name, p.location) as location,
              g.name as guide_name, g.contact as guide_contact
       FROM bookings b
       LEFT JOIN tours t ON b.tour_id = t.id
       LEFT JOIN destinations d ON t.destination_id = d.id
       LEFT JOIN guides g ON b.guide_id = g.id
+      LEFT JOIN realtime_places_cache p ON b.tour_id = p.id
       WHERE b.user_id = ?
       ORDER BY b.created_at DESC
     `, [req.user.userId]);
@@ -543,16 +552,44 @@ router.put('/bookings/:id/cancel', authenticateToken, async (req, res) => {
 
 // Add to wishlist (protected)
 router.post('/wishlist', authenticateToken, async (req, res) => {
-  const { itemId, itemType } = req.body;
+  const { itemId, itemType, placeDetails } = req.body;
   if (!itemId || !itemType) {
     return res.status(400).json({ message: 'Missing required fields' });
   }
   try {
     const conn = await getConnection();
+    
+    // If it's a real-time place, make sure it is cached in the database
+    if (['hotel', 'restaurant', 'cafe', 'club'].includes(itemType)) {
+      const details = placeDetails || {};
+      const name = details.name || 'Unnamed Place';
+      const type = details.type || itemType;
+      const location = details.location || 'Goa, India';
+      const region = details.region || (details.latitude && details.latitude >= 15.45 ? 'North Goa' : 'South Goa') || 'Goa';
+      const description = details.description || `A wonderful ${itemType} in Goa.`;
+      const price_range = details.priceRange || details.price_range || 'Mid-range';
+      const opening_hours = details.openingHours || details.opening_hours || '9:00 AM - 11:00 PM';
+      const image = details.image || details.image_url || '';
+      const rating = details.rating || 4.5;
+      const review_count = details.reviewCount || details.review_count || 10;
+      const latitude = details.latitude || null;
+      const longitude = details.longitude || null;
+
+      await conn.execute(`
+        INSERT INTO realtime_places_cache (id, name, type, location, region, description, price_range, opening_hours, image, rating, review_count, latitude, longitude)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE
+        name = VALUES(name), type = VALUES(type), location = VALUES(location), region = VALUES(region),
+        description = VALUES(description), price_range = VALUES(price_range), opening_hours = VALUES(opening_hours),
+        image = VALUES(image), rating = VALUES(rating), review_count = VALUES(review_count),
+        latitude = VALUES(latitude), longitude = VALUES(longitude)
+      `, [String(itemId), name, type, location, region, description, price_range, opening_hours, image, rating, review_count, latitude, longitude]);
+    }
+
     // Check if already in wishlist
     const [existing] = await conn.execute(
       'SELECT id FROM wishlist WHERE user_id = ? AND item_id = ? AND item_type = ?',
-      [req.user.userId, itemId, itemType]
+      [req.user.userId, String(itemId), itemType]
     );
     if (existing.length > 0) {
       conn.release();
@@ -560,7 +597,7 @@ router.post('/wishlist', authenticateToken, async (req, res) => {
     }
     await conn.execute(
       'INSERT INTO wishlist (user_id, item_id, item_type) VALUES (?, ?, ?)',
-      [req.user.userId, itemId, itemType]
+      [req.user.userId, String(itemId), itemType]
     );
     conn.release();
     res.status(201).json({ message: 'Added to wishlist' });
@@ -575,10 +612,14 @@ router.get('/wishlist', authenticateToken, async (req, res) => {
   try {
     const conn = await getConnection();
     const [rows] = await conn.execute(`
-      SELECT w.*, t.title as tour_title, t.image_url, d.name as destination_name
+      SELECT w.*, 
+             t.title as tour_title, t.image_url as tour_image_url,
+             d.name as destination_name, d.image_url as destination_image_url,
+             p.name as place_name, p.image as place_image, p.type as place_type, p.rating as place_rating, p.location as place_location
       FROM wishlist w
       LEFT JOIN tours t ON w.item_id = t.id AND w.item_type = 'tour'
       LEFT JOIN destinations d ON w.item_id = d.id AND w.item_type = 'destination'
+      LEFT JOIN realtime_places_cache p ON w.item_id = p.id AND w.item_type IN ('hotel', 'restaurant', 'cafe', 'club')
       WHERE w.user_id = ?
       ORDER BY w.created_at DESC
     `, [req.user.userId]);
@@ -1714,6 +1755,512 @@ router.post('/admin/events/sync', authenticateToken, verifyAdmin, async (req, re
     console.error('API Sync error:', error);
     const msg = error.response ? JSON.stringify(error.response.data) : error.message;
     res.status(500).json({ message: 'Failed to sync with API', error: msg });
+  }
+});
+
+// Curated high-res Unsplash images for dynamic assignment
+const hotelImages = [
+  'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800',
+  'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=800',
+  'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=800',
+  'https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=800',
+  'https://images.unsplash.com/photo-1584132967334-10e028bd69f7?w=800'
+];
+
+const restaurantImages = [
+  'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800',
+  'https://images.unsplash.com/photo-1552566626-52f8b828add9?w=800',
+  'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800',
+  'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800',
+  'https://images.unsplash.com/photo-1559339352-11d035aa65de?w=800'
+];
+
+const cafeImages = [
+  'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=800',
+  'https://images.unsplash.com/photo-1498804103079-a6351b050096?w=800',
+  'https://images.unsplash.com/photo-1445116572660-236099ec97a0?w=800',
+  'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800',
+  'https://images.unsplash.com/photo-1507133750040-4a8f57021571?w=800'
+];
+
+const clubImages = [
+  'https://images.unsplash.com/photo-1566737236500-c8ac43014a67?w=800',
+  'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800',
+  'https://images.unsplash.com/photo-15145252531617a46d19cd819?w=800',
+  'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800',
+  'https://images.unsplash.com/photo-1574091826950-7d727a67970c?w=800'
+];
+
+const beachShackImages = [
+  'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800',
+  'https://images.unsplash.com/photo-1506929562872-bb421503ef21?w=800',
+  'https://images.unsplash.com/photo-1473116763269-255ea7657c61?w=800',
+  'https://images.unsplash.com/photo-1545569341-9eb8b30979d9?w=800',
+  'https://images.unsplash.com/photo-1519046904884-53103b34b206?w=800'
+];
+
+const casinoImages = [
+  'https://images.unsplash.com/photo-1596838132731-3301c3fd4317?w=800',
+  'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=800',
+  'https://images.unsplash.com/photo-1570649236495-42fa5fe3c48b?w=800',
+  'https://images.unsplash.com/photo-1606167668584-78701c57f13d?w=800'
+];
+
+// Reviews pool for real-time places
+const reviewsPool = {
+  Hotel: [
+    { author: 'Vikram Mehta', rating: 5, comment: 'Exceptional hospitality. Clean rooms and beautiful views.' },
+    { author: 'Sarah Connor', rating: 4, comment: 'Great location close to the beach. Friendly staff.' },
+    { author: 'Rahul Deshmukh', rating: 5, comment: 'Premium stay experience. The pool area is magnificent!' }
+  ],
+  Restaurant: [
+    { author: 'Elena Gilbert', rating: 5, comment: 'Phenomenal Goan seafood. The fish curry is out of this world!' },
+    { author: 'Amit Sharma', rating: 4, comment: 'Wonderful dining experience. Try the bebinca for dessert.' },
+    { author: 'Riya Sen', rating: 5, comment: 'Perfect ambiance for dinner. Prompt and polite service.' }
+  ],
+  Cafe: [
+    { author: 'John Doe', rating: 5, comment: 'Best espresso in town! Very chill and productive environment.' },
+    { author: 'Pooja Hegde', rating: 4, comment: 'Lovely croissants and matcha lattes. Beautiful interior design.' },
+    { author: 'Sam Wilson', rating: 5, comment: 'Cozy place to relax. Good coffee, friendly hosts.' }
+  ],
+  Club: [
+    { author: 'Dj Shadow', rating: 5, comment: 'Incredible acoustics and high-energy music. Best party in Goa!' },
+    { author: 'Neha Kakkar', rating: 4, comment: 'Wild crowd and fantastic cocktails. The light show was amazing.' },
+    { author: 'Steve Rogers', rating: 5, comment: 'Upscale venue. Highly secure and awesome cocktails.' }
+  ],
+  Casino: [
+    { author: 'Tony Stark', rating: 5, comment: 'Thrilling experience. Excellent games, premium drinks, and live shows.' },
+    { author: 'Bruce Wayne', rating: 5, comment: 'Upscale floating casino. The hospitality is top notch.' },
+    { author: 'Diana Prince', rating: 4, comment: 'Very exciting atmosphere. Great entertainment options on board.' }
+  ],
+  Default: [
+    { author: 'Sahil Sawant', rating: 5, comment: 'Amazing place! Strongly recommend visiting when in Goa.' },
+    { author: 'Anjali R.', rating: 4, comment: 'Lovely ambiance and great staff. Very pleasant visit.' }
+  ]
+};
+
+// GET Real-time places from Overpass API (with DB caching & fallback)
+router.get('/realtime/places', async (req, res) => {
+  const { category, region, search } = req.query;
+  const axios = require('axios');
+
+  const categoryMap = {
+    hotels: [
+      'node["tourism"="hotel"]',
+      'node["tourism"="guest_house"]',
+      'node["tourism"="resort"]',
+      'node["tourism"="hostel"]'
+    ],
+    restaurants: [
+      'node["amenity"="restaurant"]',
+      'node["amenity"="food_court"]'
+    ],
+    cafes: [
+      'node["amenity"="cafe"]'
+    ],
+    clubs: [
+      'node["amenity"="nightclub"]',
+      'node["amenity"="bar"]',
+      'node["amenity"="pub"]',
+      'node["restaurant"="beach_shack"]',
+      'node["beach_shack"="yes"]',
+      'node["bar"="yes"]'
+    ],
+    casinos: [
+      'node["amenity"="casino"]',
+      'node["leisure"="casino"]'
+    ]
+  };
+
+  let typeClauses = [];
+  if (category && categoryMap[category]) {
+    typeClauses = categoryMap[category].map(c => `${c}(area.searchArea);`);
+  } else {
+    // all categories
+    Object.values(categoryMap).forEach(arr => {
+      arr.forEach(c => {
+        typeClauses.push(`${c}(area.searchArea);`);
+      });
+    });
+  }
+
+  // Search by area "Goa"
+  const query = `[out:json][timeout:25];
+area["name"="Goa"]->.searchArea;
+(
+  ${typeClauses.join('\n  ')}
+);
+out body 80;`;
+
+  let places = [];
+
+  try {
+    const response = await axios.get('https://overpass-api.de/api/interpreter', {
+      params: { data: query },
+      headers: {
+        'User-Agent': 'GoaTourismPlatform/1.0 (sahilsawant094@gmail.com)'
+      }
+    });
+
+    const elements = response.data.elements || [];
+    
+    // Process and enrich OSM nodes
+    places = elements.map(el => {
+      const tags = el.tags || {};
+      const id = `osm-${el.id}`;
+      const name = tags.name || 'Unnamed Venue';
+      const lat = el.lat;
+      const lon = el.lon;
+      const lowercaseName = name.toLowerCase();
+      
+      // Determine Type and Category Key
+      let friendlyType = 'Bar';
+      let catKey = 'clubs';
+      
+      if (tags.tourism === 'hotel') { friendlyType = 'Hotel'; catKey = 'hotels'; }
+      else if (tags.tourism === 'resort') { friendlyType = 'Resort'; catKey = 'hotels'; }
+      else if (tags.tourism === 'hostel') { friendlyType = 'Hostel'; catKey = 'hotels'; }
+      else if (tags.tourism === 'guest_house') { friendlyType = 'Guest House'; catKey = 'hotels'; }
+      else if (tags.leisure === 'casino' || tags.amenity === 'casino' || lowercaseName.includes('casino')) { friendlyType = 'Casino'; catKey = 'casinos'; }
+      else if (tags.amenity === 'nightclub' || lowercaseName.includes('club') || lowercaseName.includes('nightclub')) { friendlyType = 'Nightclub'; catKey = 'clubs'; }
+      else if (tags.restaurant === 'beach_shack' || tags.beach_shack === 'yes' || lowercaseName.includes('shack') || lowercaseName.includes('beach shack')) { friendlyType = 'Beach Shack'; catKey = 'clubs'; }
+      else if (tags.amenity === 'restaurant') { friendlyType = 'Restaurant & Bar'; catKey = 'restaurants'; }
+      else if (tags.amenity === 'food_court') { friendlyType = 'Food Court'; catKey = 'restaurants'; }
+      else if (tags.amenity === 'cafe') { friendlyType = 'Cafe'; catKey = 'cafes'; }
+      else if (tags.amenity === 'bar') { friendlyType = 'Bar'; catKey = 'clubs'; }
+      else if (tags.amenity === 'pub') { friendlyType = 'Pub'; catKey = 'clubs'; }
+      else if (tags.tourism) { friendlyType = tags.tourism.charAt(0).toUpperCase() + tags.tourism.slice(1); catKey = 'hotels'; }
+      else if (tags.amenity) { friendlyType = tags.amenity.charAt(0).toUpperCase() + tags.amenity.slice(1); }
+
+      // Get location string
+      const street = tags['addr:street'] || '';
+      const suburb = tags['addr:suburb'] || tags['addr:city'] || '';
+      const location = street && suburb ? `${street}, ${suburb}` : suburb || tags['addr:place'] || 'Goa, India';
+
+      // Region by latitude
+      const itemRegion = lat >= 15.45 ? 'North Goa' : 'South Goa';
+
+      // Dynamic details
+      const description = `A top-rated ${friendlyType.toLowerCase()} located in ${itemRegion}, Goa, known for its outstanding hospitality, lovely atmosphere, and excellent service.`;
+      
+      const priceRangeOptions = ['Budget', 'Mid-range', 'Luxury'];
+      const priceRange = priceRangeOptions[el.id % 3];
+
+      let openingHours = '9:00 AM - 11:00 PM';
+      if (catKey === 'hotels') openingHours = 'Open 24 Hours (24/7)';
+      else if (catKey === 'cafes') openingHours = '8:00 AM - 10:00 PM';
+      else if (catKey === 'clubs') openingHours = '7:00 PM - 3:00 AM';
+      if (tags.opening_hours) openingHours = tags.opening_hours;
+
+      const rating = (4.0 + (el.id % 9) / 10).toFixed(1);
+      const reviewCount = 50 + (el.id % 950);
+
+      // Select Image deterministically
+      let image = '';
+      if (friendlyType === 'Beach Shack') image = beachShackImages[el.id % beachShackImages.length];
+      else if (friendlyType === 'Casino') image = casinoImages[el.id % casinoImages.length];
+      else if (catKey === 'hotels') image = hotelImages[el.id % hotelImages.length];
+      else if (catKey === 'restaurants') image = restaurantImages[el.id % restaurantImages.length];
+      else if (catKey === 'cafes') image = cafeImages[el.id % cafeImages.length];
+      else image = clubImages[el.id % clubImages.length];
+
+      return {
+        id,
+        name,
+        type: friendlyType,
+        location,
+        region: itemRegion,
+        description,
+        priceRange,
+        openingHours,
+        image,
+        rating: parseFloat(rating),
+        reviewCount,
+        latitude: lat,
+        longitude: lon
+      };
+    });
+
+    // Cache results in DB
+    const conn = await getConnection();
+
+    const premiumCasinos = [
+      {
+        id: 'premium-casino-1',
+        name: 'Deltin Royale Casino',
+        type: 'Casino',
+        location: 'Noah\'s Ark, RND Jetty, D. Bandodkar Marg, Panaji',
+        region: 'North Goa',
+        description: 'India\'s largest and most luxurious floating casino. Offers a premium gaming experience, multi-cuisine dining, and live international entertainment on the Mandovi River.',
+        priceRange: 'Luxury',
+        openingHours: 'Open 24 Hours (24/7)',
+        image: 'https://images.unsplash.com/photo-1596838132731-3301c3fd4317?w=800',
+        rating: 4.8,
+        reviewCount: 2450,
+        latitude: 15.5015,
+        longitude: 73.8245
+      },
+      {
+        id: 'premium-casino-2',
+        name: 'Majestic Pride Casino',
+        type: 'Casino',
+        location: 'River Mandovi, Captain Of Ports Jetty, Panaji',
+        region: 'North Goa',
+        description: 'An exceptional floating casino in Goa, offering a grand gaming floor, delicious dining options, live performances, and an energizing party atmosphere.',
+        priceRange: 'Luxury',
+        openingHours: 'Open 24 Hours (24/7)',
+        image: 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=800',
+        rating: 4.6,
+        reviewCount: 1890,
+        latitude: 15.5020,
+        longitude: 73.8260
+      },
+      {
+        id: 'premium-casino-3',
+        name: 'Big Daddy Casino',
+        type: 'Casino',
+        location: 'Captain of Ports Jetty, Dayanand Bandodkar Marg, Panaji',
+        region: 'North Goa',
+        description: 'A state-of-the-art floating casino on the Mandovi River, featuring offshore gaming, multi-cuisine restaurants, premium bars, and spectacular live dance shows.',
+        priceRange: 'Luxury',
+        openingHours: 'Open 24 Hours (24/7)',
+        image: 'https://images.unsplash.com/photo-1570649236495-42fa5fe3c48b?w=800',
+        rating: 4.7,
+        reviewCount: 3100,
+        latitude: 15.5010,
+        longitude: 73.8230
+      },
+      {
+        id: 'premium-casino-4',
+        name: 'Deltin Jaqk',
+        type: 'Casino',
+        location: 'Fisheries Jetty, Dayanand Bandodkar Marg, Panaji',
+        region: 'North Goa',
+        description: 'A highly popular floating casino offering a premium gaming experience, delicious buffet dinners, and complimentary drinks for players.',
+        priceRange: 'Luxury',
+        openingHours: 'Open 24 Hours (24/7)',
+        image: 'https://images.unsplash.com/photo-1606167668584-78701c57f13d?w=800',
+        rating: 4.5,
+        reviewCount: 1540,
+        latitude: 15.5030,
+        longitude: 73.8270
+      }
+    ];
+
+    for (const pc of premiumCasinos) {
+      await conn.execute(`
+        INSERT INTO realtime_places_cache (id, name, type, location, region, description, price_range, opening_hours, image, rating, review_count, latitude, longitude)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE
+        name = VALUES(name), type = VALUES(type), location = VALUES(location), region = VALUES(region),
+        description = VALUES(description), price_range = VALUES(price_range), opening_hours = VALUES(opening_hours),
+        image = VALUES(image), rating = VALUES(rating), review_count = VALUES(review_count),
+        latitude = VALUES(latitude), longitude = VALUES(longitude)
+      `, [pc.id, pc.name, pc.type, pc.location, pc.region, pc.description, pc.priceRange, pc.openingHours, pc.image, pc.rating, pc.reviewCount, pc.latitude, pc.longitude]);
+    }
+
+    for (const p of places) {
+      await conn.execute(`
+        INSERT INTO realtime_places_cache (id, name, type, location, region, description, price_range, opening_hours, image, rating, review_count, latitude, longitude)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE
+        name = VALUES(name), type = VALUES(type), location = VALUES(location), region = VALUES(region),
+        description = VALUES(description), price_range = VALUES(price_range), opening_hours = VALUES(opening_hours),
+        image = VALUES(image), rating = VALUES(rating), review_count = VALUES(review_count),
+        latitude = VALUES(latitude), longitude = VALUES(longitude)
+      `, [p.id, p.name, p.type, p.location, p.region, p.description, p.priceRange, p.openingHours, p.image, p.rating, p.reviewCount, p.latitude, p.longitude]);
+    }
+
+    if (!category || category === 'all' || category === 'casinos') {
+      places = [...premiumCasinos, ...places];
+    }
+
+    // Fetch user reviews from DB in bulk
+    const placeIds = places.map(p => p.id);
+    let dbReviewsMap = {};
+    if (placeIds.length > 0) {
+      const placeholders = placeIds.map(() => '?').join(',');
+      const [dbReviews] = await conn.execute(`
+        SELECT r.tour_id, r.rating, r.comment, u.full_name AS author 
+        FROM reviews r 
+        JOIN users u ON r.user_id = u.id 
+        WHERE r.tour_id IN (${placeholders})
+      `, placeIds);
+      
+      dbReviews.forEach(rev => {
+        if (!dbReviewsMap[rev.tour_id]) dbReviewsMap[rev.tour_id] = [];
+        dbReviewsMap[rev.tour_id].push({
+          author: rev.author,
+          rating: rev.rating,
+          comment: rev.comment
+        });
+      });
+    }
+    conn.release();
+
+    // Map reviewsList onto places elements
+    places.forEach(p => {
+      const userRevs = dbReviewsMap[p.id] || [];
+      const pool = reviewsPool[p.type] || reviewsPool[p.type.includes('Hotel') ? 'Hotel' : p.type.includes('Restaurant') ? 'Restaurant' : p.type.includes('Cafe') ? 'Cafe' : p.type.includes('Casino') ? 'Casino' : 'Default'] || reviewsPool.Default;
+      const numericId = parseInt(p.id.replace('osm-', '')) || 0;
+      const mockRevs = [
+        pool[numericId % pool.length],
+        pool[(numericId + 1) % pool.length]
+      ];
+      p.reviewsList = [...userRevs, ...mockRevs];
+    });
+
+    // Apply filtering after fetching
+    if (region && region !== 'all') {
+      places = places.filter(p => p.region.toLowerCase() === region.toLowerCase());
+    }
+    if (search) {
+      places = places.filter(p => p.name.toLowerCase().includes(search.toLowerCase()) || p.location.toLowerCase().includes(search.toLowerCase()));
+    }
+
+  } catch (apiError) {
+    console.error('Overpass API call failed, falling back to database cache:', apiError.message);
+    try {
+      const conn = await getConnection();
+      let dbQuery = 'SELECT * FROM realtime_places_cache';
+      let dbParams = [];
+      const conditions = [];
+
+      if (category && category !== 'all') {
+        if (category === 'hotels') {
+          conditions.push("type IN ('Hotel', 'Resort', 'Hostel', 'Guest House')");
+        } else if (category === 'restaurants') {
+          conditions.push("type IN ('Restaurant & Bar', 'Food Court')");
+        } else if (category === 'cafes') {
+          conditions.push("type = 'Cafe'");
+        } else if (category === 'clubs') {
+          conditions.push("type IN ('Bar', 'Pub', 'Nightclub', 'Beach Shack')");
+        } else if (category === 'casinos') {
+          conditions.push("type = 'Casino'");
+        }
+      }
+      if (region && region !== 'all') {
+        conditions.push('region = ?');
+        dbParams.push(region);
+      }
+      if (search) {
+        conditions.push('name LIKE ?');
+        dbParams.push(`%${search}%`);
+      }
+
+      if (conditions.length > 0) {
+        dbQuery += ' WHERE ' + conditions.join(' AND ');
+      }
+      dbQuery += ' LIMIT 80';
+
+      const [rows] = await conn.execute(dbQuery, dbParams);
+
+      const dbPlaceIds = rows.map(r => r.id);
+      let dbReviewsMap = {};
+      if (dbPlaceIds.length > 0) {
+        const placeholders = dbPlaceIds.map(() => '?').join(',');
+        const [dbReviews] = await conn.execute(`
+          SELECT r.tour_id, r.rating, r.comment, u.full_name AS author 
+          FROM reviews r 
+          JOIN users u ON r.user_id = u.id 
+          WHERE r.tour_id IN (${placeholders})
+        `, dbPlaceIds);
+        
+        dbReviews.forEach(rev => {
+          if (!dbReviewsMap[rev.tour_id]) dbReviewsMap[rev.tour_id] = [];
+          dbReviewsMap[rev.tour_id].push({
+            author: rev.author,
+            rating: rev.rating,
+            comment: rev.comment
+          });
+        });
+      }
+      conn.release();
+
+      places = rows.map(r => {
+        const p = {
+          id: r.id,
+          name: r.name,
+          type: r.type,
+          location: r.location,
+          region: r.region,
+          description: r.description,
+          priceRange: r.price_range,
+          openingHours: r.opening_hours,
+          image: r.image,
+          rating: parseFloat(r.rating),
+          reviewCount: r.review_count,
+          latitude: parseFloat(r.latitude),
+          longitude: parseFloat(r.longitude)
+        };
+
+        const userRevs = dbReviewsMap[p.id] || [];
+        const pool = reviewsPool[p.type] || reviewsPool[p.type.includes('Hotel') ? 'Hotel' : p.type.includes('Restaurant') ? 'Restaurant' : p.type.includes('Cafe') ? 'Cafe' : p.type.includes('Casino') ? 'Casino' : 'Default'] || reviewsPool.Default;
+        const numericId = parseInt(p.id.replace('osm-', '')) || 0;
+        const mockRevs = [
+          pool[numericId % pool.length],
+          pool[(numericId + 1) % pool.length]
+        ];
+        p.reviewsList = [...userRevs, ...mockRevs];
+        return p;
+      });
+    } catch (dbError) {
+      console.error('Cache fallback failed:', dbError.message);
+      return res.status(500).json({ message: 'Failed to retrieve places data' });
+    }
+  }
+
+  res.json(places);
+});
+
+// GET a single real-time place by ID (from cache or live)
+router.get('/realtime/places/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const conn = await getConnection();
+    const [rows] = await conn.execute('SELECT * FROM realtime_places_cache WHERE id = ?', [id]);
+
+    if (rows.length === 0) {
+      conn.release();
+      return res.status(404).json({ message: 'Place not found' });
+    }
+
+    const r = rows[0];
+
+    const [dbReviews] = await conn.execute(`
+      SELECT r.rating, r.comment, u.full_name AS author 
+      FROM reviews r 
+      JOIN users u ON r.user_id = u.id 
+      WHERE r.tour_id = ?
+    `, [id]);
+    conn.release();
+
+    const pool = reviewsPool[r.type] || reviewsPool[r.type.includes('Hotel') ? 'Hotel' : r.type.includes('Restaurant') ? 'Restaurant' : r.type.includes('Cafe') ? 'Cafe' : r.type.includes('Casino') ? 'Casino' : 'Default'] || reviewsPool.Default;
+    const numericId = parseInt(id.replace('osm-', '')) || 0;
+    const mockRevs = [
+      pool[numericId % pool.length],
+      pool[(numericId + 1) % pool.length]
+    ];
+
+    res.json({
+      id: r.id,
+      name: r.name,
+      type: r.type,
+      location: r.location,
+      region: r.region,
+      description: r.description,
+      priceRange: r.price_range,
+      openingHours: r.opening_hours,
+      image: r.image,
+      rating: parseFloat(r.rating),
+      reviewCount: r.review_count,
+      latitude: parseFloat(r.latitude),
+      longitude: parseFloat(r.longitude),
+      reviewsList: [...dbReviews, ...mockRevs]
+    });
+  } catch (error) {
+    console.error('Get place by ID error:', error);
+    res.status(500).json({ message: 'Internal server error' });
   }
 });
 

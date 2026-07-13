@@ -1,17 +1,41 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { MapPin, Clock, Filter, Search, Heart, Star } from 'lucide-react';
+import { MapPin, Clock, Filter, Search, Heart, Star, Loader2 } from 'lucide-react';
 import { useWishlist } from '../context/WishlistContext';
 import { goaNightlife } from '../data/nightlifeData';
 
 const Nightlife: React.FC = () => {
+    const [venues, setVenues] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
     const [selectedRegion, setSelectedRegion] = useState<'all' | 'North Goa' | 'South Goa'>('all');
     const [selectedType, setSelectedType] = useState<'all' | 'Nightclub' | 'Beach Shack' | 'Bar' | 'Casino' | 'Restaurant & Bar'>('all');
     const [selectedPriceRange, setSelectedPriceRange] = useState<'all' | 'Budget' | 'Mid-range' | 'Luxury'>('all');
     const [searchQuery, setSearchQuery] = useState('');
 
     const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
+
+    useEffect(() => {
+        setLoading(true);
+        fetch('http://localhost:5000/api/realtime/places?category=clubs')
+            .then(res => {
+                if (!res.ok) throw new Error('API failed');
+                return res.json();
+            })
+            .then(data => {
+                if (data && data.length > 0) {
+                    setVenues(data);
+                } else {
+                    setVenues(goaNightlife);
+                }
+                setLoading(false);
+            })
+            .catch(err => {
+                console.error('Error fetching real-time nightlife:', err);
+                setVenues(goaNightlife);
+                setLoading(false);
+            });
+    }, []);
 
     const toggleWishlist = (e: React.MouseEvent, venue: any) => {
         e.preventDefault();
@@ -23,7 +47,7 @@ const Nightlife: React.FC = () => {
         }
     };
 
-    const filteredVenues = goaNightlife.filter(venue => {
+    const filteredVenues = venues.filter(venue => {
         const matchesRegion = selectedRegion === 'all' || venue.region === selectedRegion;
         const matchesType = selectedType === 'all' || venue.type === selectedType;
         const matchesPriceRange = selectedPriceRange === 'all' || venue.priceRange === selectedPriceRange;
@@ -142,95 +166,111 @@ const Nightlife: React.FC = () => {
                     </h2>
                 </div>
 
-                {/* Venues Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {filteredVenues.map((venue, index) => {
-                        const isWishlisted = isInWishlist(String(venue.id), 'nightlife');
-
-                        return (
-                            <motion.div
-                                key={venue.id}
-                                initial={{ opacity: 0, y: 30 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.6, delay: index * 0.1 }}
-                                className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 group"
-                            >
-                                <div className="relative overflow-hidden">
-                                    <img
-                                        src={venue.image}
-                                        alt={venue.name}
-                                        className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-                                    />
-                                    <div className="absolute top-4 left-4 bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                                        {venue.type}
-                                    </div>
-                                    <button
-                                        onClick={(e) => toggleWishlist(e, venue)}
-                                        className="absolute top-4 right-4 p-2 rounded-full bg-white dark:bg-gray-700 shadow-md hover:scale-110 transition-transform z-10"
-                                    >
-                                        <Heart className={`h-5 w-5 ${isWishlisted ? 'fill-red-500 text-red-500' : 'text-gray-400 dark:text-gray-300'}`} />
-                                    </button>
-                                    <div className="absolute top-16 right-4 bg-white/90 dark:bg-gray-800/90 px-2 py-1 rounded-full backdrop-blur-sm">
-                                        <span className={`text-xs font-semibold ${venue.priceRange === 'Budget' ? 'text-green-600 dark:text-green-400' :
-                                            venue.priceRange === 'Mid-range' ? 'text-orange-600 dark:text-orange-400' :
-                                                'text-purple-600 dark:text-purple-400'
-                                            }`}>
-                                            {venue.priceRange}
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <div className="p-6">
-                                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{venue.name}</h3>
-                                    <p className="text-gray-600 dark:text-gray-300 mb-4 line-clamp-2">{venue.description}</p>
-
-                                    <div className="flex items-center justify-between mb-4">
-                                        <div className="flex items-center space-x-1 text-gray-500 dark:text-gray-400">
-                                            <MapPin className="h-4 w-4" />
-                                            <span className="text-sm">{venue.region}</span>
-                                        </div>
-                                        <div className="flex items-center space-x-1">
-                                            <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                                            <span className="text-sm font-semibold text-gray-900 dark:text-white">{venue.rating}</span>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex items-center space-x-1 text-gray-500 dark:text-gray-400 mb-4">
-                                        <Clock className="h-4 w-4" />
-                                        <span className="text-sm">{venue.openingHours}</span>
-                                    </div>
-
-                                    <div className="mb-4">
-                                        <div className="flex flex-wrap gap-1">
-                                            {venue.musicGenre.slice(0, 2).map((genre: string, idx: number) => (
-                                                <span
-                                                    key={idx}
-                                                    className="text-xs bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 px-2 py-1 rounded"
-                                                >
-                                                    {genre}
-                                                </span>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    <Link
-                                        to={`/nightlife/${venue.id}`}
-                                        className="block w-full bg-blue-600 hover:bg-blue-700 text-white text-center px-4 py-2 rounded-lg transition-colors"
-                                    >
-                                        View Details
-                                    </Link>
-                                </div>
-                            </motion.div>
-                        );
-                    })}
-                </div>
-
-                {filteredVenues.length === 0 && (
-                    <div className="text-center py-12">
-                        <Filter className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                        <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No venues found</h3>
-                        <p className="text-gray-600 dark:text-gray-400">Try adjusting your search criteria or filters</p>
+                {/* Loading State */}
+                {loading ? (
+                    <div className="flex flex-col items-center justify-center py-24">
+                        <Loader2 className="h-12 w-12 text-blue-600 animate-spin mb-4" />
+                        <p className="text-gray-600 dark:text-gray-400 font-medium">Fetching real-time Goa nightlife data...</p>
                     </div>
+                ) : (
+                    <>
+                        {/* Venues Grid */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                            {filteredVenues.map((venue, index) => {
+                                const isWishlisted = isInWishlist(String(venue.id), 'nightlife');
+                                const genres = venue.musicGenre || ['Live Music', 'Cocktails'];
+
+                                return (
+                                    <motion.div
+                                        key={venue.id}
+                                        initial={{ opacity: 0, y: 30 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ duration: 0.6, delay: index * 0.1 }}
+                                        className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 group flex flex-col justify-between"
+                                    >
+                                        <div className="relative overflow-hidden aspect-[4/3] bg-gray-100 dark:bg-gray-700">
+                                            <img
+                                                src={venue.image}
+                                                alt={venue.name}
+                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                            />
+                                            <div className="absolute top-4 left-4 bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                                                {venue.type}
+                                            </div>
+                                            <button
+                                                onClick={(e) => toggleWishlist(e, venue)}
+                                                className="absolute top-4 right-4 p-2 rounded-full bg-white dark:bg-gray-750 shadow-md hover:scale-110 transition-transform z-10 text-gray-700 dark:text-gray-200"
+                                            >
+                                                <Heart className={`h-5 w-5 ${isWishlisted ? 'fill-red-500 text-red-500' : 'text-gray-400 dark:text-gray-300'}`} />
+                                            </button>
+                                            <div className="absolute top-16 right-4 bg-white/95 dark:bg-gray-800/95 px-2.5 py-1 rounded-lg backdrop-blur-sm shadow-md">
+                                                <span className={`text-xs font-bold ${venue.priceRange === 'Budget' ? 'text-green-600 dark:text-green-400' :
+                                                    venue.priceRange === 'Mid-range' ? 'text-orange-655 dark:text-orange-400' :
+                                                        'text-purple-600 dark:text-purple-400'
+                                                    }`}>
+                                                    {venue.priceRange}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <div className="p-6 flex-grow flex flex-col justify-between">
+                                            <div>
+                                                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 line-clamp-1">{venue.name}</h3>
+                                                <p className="text-gray-600 dark:text-gray-350 mb-4 line-clamp-2 text-sm leading-relaxed">{venue.description}</p>
+
+                                                <div className="flex items-center justify-between mb-4">
+                                                    <div className="flex items-center space-x-1 text-gray-500 dark:text-gray-400 max-w-[170px] truncate">
+                                                        <MapPin className="h-4 w-4 shrink-0" />
+                                                        <span className="text-xs">{venue.location || venue.region}</span>
+                                                    </div>
+                                                    <div className="flex items-center space-x-1">
+                                                        <Star className="h-4 w-4 text-yellow-400 fill-current" />
+                                                        <span className="text-xs font-semibold text-gray-900 dark:text-white">{venue.rating}</span>
+                                                        {venue.reviewCount && <span className="text-[10px] text-gray-400">({venue.reviewCount})</span>}
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex items-center space-x-1 text-gray-500 dark:text-gray-405 text-xs mb-4">
+                                                    <Clock className="h-4 w-4 shrink-0" />
+                                                    <span>{venue.openingHours}</span>
+                                                </div>
+                                            </div>
+
+                                            <div className="mt-auto">
+                                                <div className="mb-4">
+                                                    <div className="flex flex-wrap gap-1">
+                                                        {genres.slice(0, 2).map((genre: string, idx: number) => (
+                                                            <span
+                                                                key={idx}
+                                                                className="text-[10px] bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 px-2 py-0.5 rounded font-medium"
+                                                            >
+                                                                {genre}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                </div>
+
+                                                <Link
+                                                    to={`/nightlife/${venue.id}`}
+                                                    className="block w-full bg-blue-600 hover:bg-blue-700 text-white text-center px-4 py-2.5 rounded-lg transition-colors font-medium text-sm"
+                                                >
+                                                    View Details
+                                                </Link>
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                );
+                            })}
+                        </div>
+
+                        {filteredVenues.length === 0 && (
+                            <div className="text-center py-16">
+                                <Filter className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No venues found</h3>
+                                <p className="text-gray-650 dark:text-gray-400">Try adjusting your search criteria or filters</p>
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
         </div>

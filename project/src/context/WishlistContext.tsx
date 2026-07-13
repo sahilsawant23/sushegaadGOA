@@ -2,9 +2,11 @@ import React, { createContext, useContext, useReducer, useEffect, ReactNode } fr
 import { useAuth } from './AuthContext';
 import toast from 'react-hot-toast';
 
+export type WishlistItemType = 'tour' | 'beach' | 'nightlife' | 'temple' | 'church' | 'waterfall' | 'authentic' | 'culture' | 'hotel' | 'restaurant' | 'cafe' | 'club';
+
 interface WishlistItem {
   id: string;
-  type: 'tour' | 'beach' | 'nightlife' | 'temple' | 'church' | 'waterfall' | 'authentic' | 'culture';
+  type: WishlistItemType;
   data: any;
   addedAt: Date;
 }
@@ -21,10 +23,10 @@ interface WishlistAction {
 
 const WishlistContext = createContext<{
   state: WishlistState;
-  addToWishlist: (item: any, type: 'tour' | 'beach' | 'nightlife' | 'temple' | 'church' | 'waterfall' | 'authentic' | 'culture') => Promise<void>;
-  removeFromWishlist: (id: string, type: 'tour' | 'beach' | 'nightlife' | 'temple' | 'church' | 'waterfall' | 'authentic' | 'culture') => Promise<void>;
-  isInWishlist: (id: string, type: 'tour' | 'beach' | 'nightlife' | 'temple' | 'church' | 'waterfall' | 'authentic' | 'culture') => boolean;
-  getWishlistByType: (type: 'tour' | 'beach' | 'nightlife' | 'temple' | 'church' | 'waterfall' | 'authentic' | 'culture') => any[];
+  addToWishlist: (item: any, type: WishlistItemType) => Promise<void>;
+  removeFromWishlist: (id: string, type: WishlistItemType) => Promise<void>;
+  isInWishlist: (id: string, type: WishlistItemType) => boolean;
+  getWishlistByType: (type: WishlistItemType) => any[];
 } | null>(null);
 
 const wishlistReducer = (state: WishlistState, action: WishlistAction): WishlistState => {
@@ -129,7 +131,12 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
         type: item.item_type,
         data: {
           id: item.item_id,
-          title: item.tour_title || item.destination_name || item.name, // Fallback
+          name: item.place_name || item.destination_name || item.tour_title || item.name || 'Unnamed Place',
+          title: item.tour_title || item.place_name || item.destination_name || item.name || 'Unnamed',
+          image: item.place_image || item.image_url || item.tour_image_url || item.destination_image_url || '',
+          rating: item.place_rating || item.rating || 0,
+          location: item.place_location || item.location || '',
+          type: item.place_type || item.item_type || '',
           ...item
         },
         addedAt: new Date(item.created_at)
@@ -146,7 +153,7 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
     localStorage.setItem('wishlist', JSON.stringify(items));
   };
 
-  const addToWishlist = async (item: any, type: 'tour' | 'beach' | 'nightlife' | 'temple' | 'church' | 'waterfall' | 'authentic' | 'culture') => {
+  const addToWishlist = async (item: any, type: WishlistItemType) => {
     const wishlistItem: WishlistItem = {
       id: `${type}-${item.id}`,
       type,
@@ -165,7 +172,21 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
           },
           body: JSON.stringify({
             itemId: item.id,
-            itemType: type
+            itemType: type,
+            placeDetails: ['hotel', 'restaurant', 'cafe', 'club'].includes(type) ? {
+              name: item.name,
+              type: item.type,
+              location: item.location,
+              region: item.region,
+              description: item.description,
+              priceRange: item.priceRange,
+              openingHours: item.openingHours,
+              image: item.image,
+              rating: item.rating,
+              reviewCount: item.reviewCount,
+              latitude: item.latitude,
+              longitude: item.longitude
+            } : undefined
           })
         });
 
@@ -188,7 +209,7 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
     }
   };
 
-  const removeFromWishlist = async (id: string, type: 'tour' | 'beach' | 'nightlife' | 'temple' | 'church' | 'waterfall' | 'authentic' | 'culture') => {
+  const removeFromWishlist = async (id: string, type: WishlistItemType) => {
     if (authState.isAuthenticated && authState.user) {
       try {
         const token = localStorage.getItem('token');
@@ -215,11 +236,11 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
     }
   };
 
-  const isInWishlist = (id: string, type: 'tour' | 'beach' | 'nightlife' | 'temple' | 'church' | 'waterfall' | 'authentic' | 'culture') => {
-    return state.items.some(item => item.data.id === id && item.type === type);
+  const isInWishlist = (id: string, type: WishlistItemType) => {
+    return state.items.some(item => String(item.data.id) === String(id) && item.type === type);
   };
 
-  const getWishlistByType = (type: 'tour' | 'beach' | 'nightlife' | 'temple' | 'church' | 'waterfall' | 'authentic' | 'culture') => {
+  const getWishlistByType = (type: WishlistItemType) => {
     return state.items.filter(item => item.type === type).map(item => item.data);
   };
 

@@ -1,7 +1,7 @@
 // Universal Place Details Component
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, MapPin, Star, Clock, Info, Image as ImageIcon } from 'lucide-react';
+import { useNavigate, useParams, Link } from 'react-router-dom';
+import { ArrowLeft, MapPin, Star, Clock, Info, Image as ImageIcon, Calendar } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { goaNightlife } from '../data/nightlifeData';
 import { goaChurches } from '../data/churchData';
@@ -10,7 +10,7 @@ import { goaBeaches } from '../data/beachesData';
 import { goaWaterfalls } from '../data/waterfallData';
 
 const PlaceDetails: React.FC = () => {
-    const { id, category } = useParams<{ id: string; category?: string }>();
+    const { id } = useParams<{ id: string; category?: string }>();
     const navigate = useNavigate();
     const [place, setPlace] = useState<any>(null);
     const [loading, setLoading] = useState(true);
@@ -18,6 +18,80 @@ const PlaceDetails: React.FC = () => {
 
     useEffect(() => {
         setLoading(true);
+
+        const fetchReviews = (placeId: string) => {
+            fetch(`http://localhost:5000/api/reviews/${placeId}`)
+                .then(res => res.json())
+                .then(resData => {
+                    const dbRevs = resData.reviews || [];
+                    setPlace((prev: any) => {
+                        if (!prev) return prev
+
+                        const existingList = prev.reviewsList || [];
+
+                        const uniqueDbRevs = dbRevs
+                            .filter(
+                                (dr: any) =>
+                                    !existingList.some((er: any) => er.comment === dr.comment)
+                            )
+                            .map((dr: any) => ({
+                                author: dr.user_name,
+                                rating: dr.rating,
+                                comment: dr.comment,
+                            }));
+
+                        return {
+                            ...prev,
+                            reviewsList: [...uniqueDbRevs, ...existingList],
+                        };
+                    });
+                })
+                .catch(err => console.error('Error fetching reviews:', err));
+        };
+
+        if (id && id.startsWith('osm-')) {
+            fetch(`http://localhost:5000/api/realtime/places/${id}`)
+                .then(res => {
+                    if (!res.ok) throw new Error('Not found');
+                    return res.json();
+                })
+                .then(data => {
+                    const mappedPlace = {
+                        id: data.id,
+                        name: data.name,
+                        category: data.type,
+                        region: data.region,
+                        description: data.description,
+                        image_url: data.image,
+                        gallery_images: [data.image],
+                        reviewsList: data.reviewsList || [],
+                        details: {
+                            timings: data.openingHours,
+                            entryFee: data.priceRange === 'Budget' ? 'Budget Friendly' : data.priceRange === 'Mid-range' ? 'Moderate Entry Charge' : 'Luxury / Cover Charge Applicable',
+                            bestTime: 'Evening / Night',
+                            bestSeason: 'October to May (Peak Season)',
+                            bestFor: data.type.toLowerCase().includes('hotel')
+                                ? ['Accommodation', 'Staycation', 'Relaxation']
+                                : ['Socializing', 'Drinks', 'Fine Dining', 'Local Atmosphere'],
+                            highlights: data.type.toLowerCase().includes('hotel')
+                                ? ['Clean Rooms', 'Excellent Amenities', 'Scenic Views']
+                                : ['Live Music', 'Premium Cocktails', 'Great Ambiance'],
+                            safetyTips: data.type.toLowerCase().includes('hotel')
+                                ? 'Keep your valuables safe in the hotel room locker.'
+                                : 'Drink responsibly. Book a cab or designate a driver beforehand.'
+                        }
+                    };
+                    setPlace(mappedPlace);
+                    setActiveImage(data.image);
+                    setLoading(false);
+                    fetchReviews(data.id);
+                })
+                .catch(err => {
+                    console.error('Error fetching real-time place:', err);
+                    setLoading(false);
+                });
+            return;
+        }
 
         const checkStaticData = () => {
             // Helper to adapt static data to new schema
@@ -82,6 +156,7 @@ const PlaceDetails: React.FC = () => {
             setPlace(staticData);
             if (staticData.image_url) setActiveImage(staticData.image_url);
             setLoading(false);
+            fetchReviews(staticData.id);
             return;
         }
 
@@ -95,6 +170,7 @@ const PlaceDetails: React.FC = () => {
                 setPlace(data);
                 if (data.image_url) setActiveImage(data.image_url);
                 setLoading(false);
+                fetchReviews(data.id);
             })
             .catch(err => {
                 console.error('Error:', err);
@@ -250,6 +326,39 @@ const PlaceDetails: React.FC = () => {
                                 </div>
                             </div>
                         )}
+
+                        {/* Reviews Section */}
+                        {place.reviewsList && place.reviewsList.length > 0 && (
+                            <div className="mt-12 pt-8 border-t border-gray-150 dark:border-gray-700">
+                                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
+                                    <Star className="w-6 h-6 mr-2 text-yellow-500 fill-current" />
+                                    Customer Reviews
+                                </h3>
+                                <div className="space-y-6">
+                                    {place.reviewsList.map((rev: any, idx: number) => (
+                                        <div key={idx} className="bg-gray-50 dark:bg-gray-800/40 p-5 rounded-2xl border border-gray-100 dark:border-gray-700/50">
+                                            <div className="flex justify-between items-start mb-2">
+                                                <span className="font-bold text-gray-900 dark:text-white">{rev.user_name || rev.author || 'Anonymous'}</span>
+                                                <div className="flex items-center space-x-0.5">
+                                                    {Array.from({ length: 5 }).map((_, i) => (
+                                                        <Star
+                                                            key={i}
+                                                            className={`w-4 h-4 ${i < rev.rating
+                                                                    ? 'text-yellow-400 fill-current'
+                                                                    : 'text-gray-300 dark:text-gray-605'
+                                                                }`}
+                                                        />
+                                                    ))}
+                                                </div>
+                                            </div>
+                                            <p className="text-gray-650 dark:text-gray-350 text-sm leading-relaxed italic">
+                                                &ldquo;{rev.comment}&rdquo;
+                                            </p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Right Column: Key Details & Map */}
@@ -316,6 +425,14 @@ const PlaceDetails: React.FC = () => {
                                 <MapPin className="w-5 h-5 mr-2" />
                                 Get Directions
                             </a>
+
+                            <Link
+                                to={`/booking/${place.id}`}
+                                className="mt-4 flex items-center justify-center w-full py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-semibold transition-colors shadow-md shadow-green-500/10"
+                            >
+                                <Calendar className="w-5 h-5 mr-2" />
+                                Reserve / Book Now
+                            </Link>
                         </div>
                     </div>
                 </div>

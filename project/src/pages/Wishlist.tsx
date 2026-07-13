@@ -10,7 +10,7 @@ const Wishlist: React.FC = () => {
   const { getWishlistByType, removeFromWishlist } = useWishlist();
 
   const handleRemoveFromWishlist = (type: string, id: string) => {
-    removeFromWishlist(id, type as 'tour' | 'beach' | 'nightlife');
+    removeFromWishlist(id, type as any);
   };
 
   const shareItem = (item: any) => {
@@ -26,10 +26,39 @@ const Wishlist: React.FC = () => {
     }
   };
 
+  const getItemsForActiveTab = () => {
+    if (activeTab === 'tours') return getWishlistByType('tour');
+    if (activeTab === 'beaches') return getWishlistByType('beach');
+    if (activeTab === 'nightlife') return getWishlistByType('nightlife');
+    if (activeTab === 'places') {
+      return [
+        ...getWishlistByType('hotel'),
+        ...getWishlistByType('restaurant'),
+        ...getWishlistByType('cafe'),
+        ...getWishlistByType('club')
+      ];
+    }
+    return [];
+  };
+
+  const getItemsForActiveTabCount = (tabId: string) => {
+    if (tabId === 'tours') return getWishlistByType('tour').length;
+    if (tabId === 'beaches') return getWishlistByType('beach').length;
+    if (tabId === 'nightlife') return getWishlistByType('nightlife').length;
+    if (tabId === 'places') {
+      return getWishlistByType('hotel').length +
+             getWishlistByType('restaurant').length +
+             getWishlistByType('cafe').length +
+             getWishlistByType('club').length;
+    }
+    return 0;
+  };
+
   const tabs = [
-    { id: 'tours', name: 'Tours', count: getWishlistByType('tour').length },
-    { id: 'beaches', name: 'Beaches', count: getWishlistByType('beach').length },
-    { id: 'nightlife', name: 'Nightlife', count: getWishlistByType('nightlife').length }
+    { id: 'tours', name: 'Tours', count: getItemsForActiveTabCount('tours') },
+    { id: 'beaches', name: 'Beaches', count: getItemsForActiveTabCount('beaches') },
+    { id: 'nightlife', name: 'Nightlife', count: getItemsForActiveTabCount('nightlife') },
+    { id: 'places', name: 'Hotels & Dining', count: getItemsForActiveTabCount('places') }
   ];
 
   return (
@@ -271,26 +300,94 @@ const Wishlist: React.FC = () => {
           </div>
         )}
 
-        {/* Empty State */}
-        {getWishlistByType(activeTab as 'tour' | 'beach' | 'nightlife').length === 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-center py-12"
-          >
-            <Heart className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No items in your wishlist</h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">Start exploring and save your favorite {activeTab} to your wishlist</p>
-            <Link
-              to={activeTab === 'tours' ? '/tours' : activeTab === 'beaches' ? '/destinations' : '/nightlife'}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors"
-            >
-              Explore {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
-            </Link>
-          </motion.div>
+        {/* Hotels & Dining Tab */}
+        {activeTab === 'places' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {getItemsForActiveTab().map((place, index) => (
+              <motion.div
+                key={place.id}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+                className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 group flex flex-col justify-between"
+              >
+                <div className="relative overflow-hidden aspect-[4/3] bg-gray-150 dark:bg-gray-700">
+                  <img
+                    src={place.image}
+                    alt={place.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                  <div className="absolute top-4 left-4 bg-blue-600 text-white px-2.5 py-1 rounded-lg text-xs font-bold shadow-md">
+                    {place.type}
+                  </div>
+                  <div className="absolute top-4 right-4 flex space-x-2">
+                    <button
+                      onClick={() => shareItem(place)}
+                      className="p-2 bg-white dark:bg-gray-750 bg-opacity-90 rounded-full hover:bg-opacity-100 transition-colors shadow-md text-gray-700 dark:text-gray-200"
+                    >
+                      <Share2 className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => handleRemoveFromWishlist(place.type.toLowerCase().includes('hotel') ? 'hotel' : place.type.toLowerCase().includes('restaurant') ? 'restaurant' : place.type.toLowerCase().includes('cafe') ? 'cafe' : 'club', place.id)}
+                      className="p-2 bg-white dark:bg-gray-750 bg-opacity-90 rounded-full hover:bg-opacity-100 transition-colors shadow-md text-red-650"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="p-6 flex-grow flex flex-col justify-between">
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 line-clamp-1">{place.name}</h3>
+                    <p className="text-gray-650 dark:text-gray-300 mb-4 line-clamp-2 text-sm leading-relaxed">{place.description}</p>
+
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center space-x-1">
+                        <Star className="h-4 w-4 text-yellow-400 fill-current" />
+                        <span className="text-sm font-semibold text-gray-900 dark:text-white">{place.rating}</span>
+                        <span className="text-xs text-gray-400 dark:text-gray-500">({place.reviewCount})</span>
+                      </div>
+                      <span className="text-xs text-gray-500 dark:text-gray-400 max-w-[150px] truncate">{place.location}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-700 mt-auto">
+                    <span className="text-xs font-semibold text-blue-600 dark:text-blue-400">{place.openingHours}</span>
+                    <a
+                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name + ' ' + place.location)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs font-bold text-gray-500 hover:text-blue-600 dark:text-gray-450 dark:hover:text-blue-400 transition-colors"
+                    >
+                      View on Map
+                    </a>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
         )}
       </div>
+
+      {/* Empty State */}
+      {getItemsForActiveTab().length === 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="text-center py-16"
+        >
+          <Heart className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No items in your wishlist</h3>
+          <p className="text-gray-600 dark:text-gray-450 mb-6">Start exploring and save your favorite {activeTab === 'places' ? 'hotels & dining spots' : activeTab} to your wishlist</p>
+          <Link
+            to={activeTab === 'tours' ? '/tours' : activeTab === 'beaches' ? '/destinations' : activeTab === 'nightlife' ? '/nightlife' : '/places'}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors font-medium shadow-md shadow-blue-500/20"
+          >
+            Explore {activeTab === 'places' ? 'Hotels & Dining' : activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
+          </Link>
+        </motion.div>
+      )}
     </div>
   );
 };

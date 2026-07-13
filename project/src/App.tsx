@@ -33,6 +33,7 @@ import Profile from './pages/Profile';
 import Wishlist from './pages/Wishlist';
 import Bookings from './pages/Bookings';
 import Settings from './pages/Settings';
+import RealtimeExplorer from './pages/RealtimeExplorer';
 
 import AdminDashboard from './pages/AdminDashboard';
 import GuideDashboard from './pages/GuideDashboard';
@@ -76,8 +77,9 @@ const AppContent = () => {
           <Route path="/destination/culture/:id" element={<CultureDetails />} />
           <Route path="/destination/authentic/:id" element={<AuthenticDetails />} />
           <Route path="/destination/:category/:id" element={<PlaceDetails />} />
-          <Route path="/nightlife" element={<Nightlife />} />
+          <Route path="/nightlife" element={<RealtimeExplorer />} />
           <Route path="/nightlife/:id" element={<PlaceDetails />} />
+          <Route path="/places" element={<RealtimeExplorer />} />
 
           <Route path="/events" element={<Events />} />
           <Route path="/events/:id" element={<EventDetails />} />

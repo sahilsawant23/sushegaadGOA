@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 
 const Booking: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const { tourId: id } = useParams<{ tourId: string }>();
   const location = useLocation();
   const navigate = useNavigate();
   // useAuth provides context if needed, but not using state here directly anymore
@@ -49,6 +49,36 @@ const Booking: React.FC = () => {
   });
 
   React.useEffect(() => {
+    if (!id) return;
+    setLoading(true);
+
+    if (id.startsWith('osm-')) {
+      fetch(`http://localhost:5000/api/realtime/places/${id}`)
+        .then(res => {
+          if (!res.ok) throw new Error('Place not found');
+          return res.json();
+        })
+        .then(data => {
+          const transformed = {
+            id: data.id,
+            title: data.name,
+            price: data.priceRange === 'Budget' ? 500 : data.priceRange === 'Mid-range' ? 1500 : 4000,
+            images: [data.image],
+            maxGroupSize: 15,
+            isPlace: true,
+            placeType: data.type
+          };
+          setTour(transformed);
+          setLoading(false);
+        })
+        .catch(err => {
+          console.error(err);
+          toast.error("Could not load reservation details");
+          setLoading(false);
+        });
+      return;
+    }
+
     fetch(`http://localhost:5000/api/tours/${id}`)
       .then(res => {
         if (!res.ok) throw new Error('Tour not found');
@@ -137,7 +167,7 @@ const Booking: React.FC = () => {
     try {
       // Validate date before submitting
       if (!formData.date) {
-        toast.error('Please select a tour date');
+        toast.error(tour.isPlace ? 'Please select a reservation date' : 'Please select a tour date');
         return;
       }
 
@@ -147,7 +177,7 @@ const Booking: React.FC = () => {
       selectedDate.setHours(0, 0, 0, 0);
 
       if (selectedDate < today) {
-        toast.error('Cannot book tours for past dates. Please select a future date.');
+        toast.error(tour.isPlace ? 'Cannot book reservations for past dates. Please select a future date.' : 'Cannot book tours for past dates. Please select a future date.');
         return;
       }
 
@@ -203,11 +233,17 @@ const Booking: React.FC = () => {
       <div className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <button
-            onClick={() => navigate(`/tours/${id}`)}
+            onClick={() => {
+              if (tour.isPlace) {
+                navigate(`/destination/place/${id}`);
+              } else {
+                navigate(`/tours/${id}`);
+              }
+            }}
             className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
           >
             <ArrowLeft className="h-5 w-5" />
-            <span>Back to Tour Details</span>
+            <span>{tour.isPlace ? 'Back to Details' : 'Back to Tour Details'}</span>
           </button>
         </div>
       </div>
@@ -261,7 +297,7 @@ const Booking: React.FC = () => {
                 <div className="space-y-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Tour Date
+                      {tour.isPlace ? 'Reservation Date' : 'Tour Date'}
                     </label>
                     <div className="relative">
                       <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
