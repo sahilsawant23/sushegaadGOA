@@ -49,7 +49,7 @@ const PlaceDetails: React.FC = () => {
                 .catch(err => console.error('Error fetching reviews:', err));
         };
 
-        if (id && id.startsWith('osm-')) {
+        if (id && (id.startsWith('osm-') || id.startsWith('premium-'))) {
             fetch(`http://localhost:5000/api/realtime/places/${id}`)
                 .then(res => {
                     if (!res.ok) throw new Error('Not found');

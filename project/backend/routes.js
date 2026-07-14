@@ -172,7 +172,8 @@ router.post('/forgot-password', async (req, res) => {
     conn.release();
 
     // Send Email
-    const resetLink = `http://127.0.0.1:5173/reset-password/${token}`;
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const resetLink = `${frontendUrl}/reset-password/${token}`;
     await emailService.sendPasswordResetEmail(email, resetLink);
 
     res.json({ message: 'If that email exists, a reset link has been sent.' });
@@ -1941,7 +1942,22 @@ out body 80;`;
       const itemRegion = lat >= 15.45 ? 'North Goa' : 'South Goa';
 
       // Dynamic details
-      const description = `A top-rated ${friendlyType.toLowerCase()} located in ${itemRegion}, Goa, known for its outstanding hospitality, lovely atmosphere, and excellent service.`;
+      const adjectives = ['top-rated', 'popular', 'well-known', 'highly recommended', 'fantastic', 'charming', 'vibrant', 'premium', 'cozy', 'bustling'];
+      const atmospheres = ['lovely atmosphere', 'great ambiance', 'lively vibe', 'relaxing environment', 'energetic setting', 'beautiful decor', 'authentic Goan feel'];
+      const services = ['outstanding hospitality', 'excellent service', 'friendly staff', 'quick service', 'warm welcome', 'attentive hosts'];
+      
+      const adj = adjectives[el.id % adjectives.length];
+      const atm = atmospheres[(el.id + 1) % atmospheres.length];
+      const srv = services[(el.id + 2) % services.length];
+
+      let extraInfo = '';
+      if (tags.cuisine) extraInfo += ` They serve delicious ${tags.cuisine.replace(/;/g, ' and ')} cuisine.`;
+      if (tags.outdoor_seating === 'yes') extraInfo += ` Outdoor seating is available to enjoy the Goan breeze.`;
+      if (tags.internet_access === 'wlan') extraInfo += ` Free Wi-Fi is provided for guests.`;
+      if (tags.wheelchair === 'yes') extraInfo += ` The venue is wheelchair accessible.`;
+
+      let description = `A ${adj} ${friendlyType.toLowerCase()} located in ${itemRegion}, Goa, known for its ${atm} and ${srv}.${extraInfo}`;
+      if (tags.description) description = tags.description;
       
       const priceRangeOptions = ['Budget', 'Mid-range', 'Luxury'];
       const priceRange = priceRangeOptions[el.id % 3];
@@ -2099,13 +2115,34 @@ out body 80;`;
     conn.release();
 
     // Map reviewsList onto places elements
+    const firstNames = ['Vikram', 'Sarah', 'Rahul', 'Elena', 'Amit', 'Riya', 'John', 'Pooja', 'Sam', 'Neha', 'Chris', 'Anita', 'Raj', 'Emma'];
+    const lastNames = ['Mehta', 'Connor', 'Deshmukh', 'Gilbert', 'Sharma', 'Sen', 'Doe', 'Hegde', 'Wilson', 'Kakkar', 'Evans', 'Nair', 'Patel', 'Watson'];
+    const reviewTexts = [
+      'Amazing experience! Would definitely come back.',
+      'Great place, friendly staff and lovely vibe.',
+      'Absolutely loved it. Highly recommended for anyone visiting Goa.',
+      'A bit crowded, but the service was excellent.',
+      'Fantastic! Exceeded our expectations.',
+      'Very good ambiance and reasonable prices.',
+      'The best place in town! 5 stars all the way.',
+      'Nice place, decent food/drinks and good music.',
+      'Wonderful time here with friends.',
+      'Perfect spot to relax and enjoy the evening.'
+    ];
+
     places.forEach(p => {
       const userRevs = dbReviewsMap[p.id] || [];
-      const pool = reviewsPool[p.type] || reviewsPool[p.type.includes('Hotel') ? 'Hotel' : p.type.includes('Restaurant') ? 'Restaurant' : p.type.includes('Cafe') ? 'Cafe' : p.type.includes('Casino') ? 'Casino' : 'Default'] || reviewsPool.Default;
-      const numericId = parseInt(p.id.replace('osm-', '')) || 0;
+      const numericId = parseInt(p.id.replace(/\\D/g, '')) || Math.floor(Math.random() * 1000);
+      
+      const author1 = `${firstNames[numericId % firstNames.length]} ${lastNames[(numericId + 1) % lastNames.length]}`;
+      const text1 = reviewTexts[numericId % reviewTexts.length];
+      
+      const author2 = `${firstNames[(numericId + 2) % firstNames.length]} ${lastNames[(numericId + 3) % lastNames.length]}`;
+      const text2 = reviewTexts[(numericId + 4) % reviewTexts.length];
+      
       const mockRevs = [
-        pool[numericId % pool.length],
-        pool[(numericId + 1) % pool.length]
+        { author: author1, rating: 5, comment: text1 },
+        { author: author2, rating: 4, comment: text2 }
       ];
       p.reviewsList = [...userRevs, ...mockRevs];
     });
@@ -2195,11 +2232,17 @@ out body 80;`;
         };
 
         const userRevs = dbReviewsMap[p.id] || [];
-        const pool = reviewsPool[p.type] || reviewsPool[p.type.includes('Hotel') ? 'Hotel' : p.type.includes('Restaurant') ? 'Restaurant' : p.type.includes('Cafe') ? 'Cafe' : p.type.includes('Casino') ? 'Casino' : 'Default'] || reviewsPool.Default;
-        const numericId = parseInt(p.id.replace('osm-', '')) || 0;
+        const numericId = parseInt(p.id.replace(/\\D/g, '')) || Math.floor(Math.random() * 1000);
+        
+        const author1 = `${firstNames[numericId % firstNames.length]} ${lastNames[(numericId + 1) % lastNames.length]}`;
+        const text1 = reviewTexts[numericId % reviewTexts.length];
+        
+        const author2 = `${firstNames[(numericId + 2) % firstNames.length]} ${lastNames[(numericId + 3) % lastNames.length]}`;
+        const text2 = reviewTexts[(numericId + 4) % reviewTexts.length];
+        
         const mockRevs = [
-          pool[numericId % pool.length],
-          pool[(numericId + 1) % pool.length]
+          { author: author1, rating: 5, comment: text1 },
+          { author: author2, rating: 4, comment: text2 }
         ];
         p.reviewsList = [...userRevs, ...mockRevs];
         return p;
@@ -2235,11 +2278,32 @@ router.get('/realtime/places/:id', async (req, res) => {
     `, [id]);
     conn.release();
 
-    const pool = reviewsPool[r.type] || reviewsPool[r.type.includes('Hotel') ? 'Hotel' : r.type.includes('Restaurant') ? 'Restaurant' : r.type.includes('Cafe') ? 'Cafe' : r.type.includes('Casino') ? 'Casino' : 'Default'] || reviewsPool.Default;
-    const numericId = parseInt(id.replace('osm-', '')) || 0;
+    const firstNames = ['Vikram', 'Sarah', 'Rahul', 'Elena', 'Amit', 'Riya', 'John', 'Pooja', 'Sam', 'Neha', 'Chris', 'Anita', 'Raj', 'Emma'];
+    const lastNames = ['Mehta', 'Connor', 'Deshmukh', 'Gilbert', 'Sharma', 'Sen', 'Doe', 'Hegde', 'Wilson', 'Kakkar', 'Evans', 'Nair', 'Patel', 'Watson'];
+    const reviewTexts = [
+      'Amazing experience! Would definitely come back.',
+      'Great place, friendly staff and lovely vibe.',
+      'Absolutely loved it. Highly recommended for anyone visiting Goa.',
+      'A bit crowded, but the service was excellent.',
+      'Fantastic! Exceeded our expectations.',
+      'Very good ambiance and reasonable prices.',
+      'The best place in town! 5 stars all the way.',
+      'Nice place, decent food/drinks and good music.',
+      'Wonderful time here with friends.',
+      'Perfect spot to relax and enjoy the evening.'
+    ];
+
+    const numericId = parseInt(id.replace(/\\D/g, '')) || Math.floor(Math.random() * 1000);
+    
+    const author1 = `${firstNames[numericId % firstNames.length]} ${lastNames[(numericId + 1) % lastNames.length]}`;
+    const text1 = reviewTexts[numericId % reviewTexts.length];
+    
+    const author2 = `${firstNames[(numericId + 2) % firstNames.length]} ${lastNames[(numericId + 3) % lastNames.length]}`;
+    const text2 = reviewTexts[(numericId + 4) % reviewTexts.length];
+    
     const mockRevs = [
-      pool[numericId % pool.length],
-      pool[(numericId + 1) % pool.length]
+      { author: author1, rating: 5, comment: text1 },
+      { author: author2, rating: 4, comment: text2 }
     ];
 
     res.json({
