@@ -1,0 +1,29 @@
+const fs = require('fs');
+const readline = require('readline');
+const path = require('path');
+
+const logPath = 'C:\\Users\\hp\\.gemini\\antigravity-ide\\brain\\1451c98c-fbc6-44be-8f42-253cd51bf054\\.system_generated\\logs\\transcript_full.jsonl';
+
+async function search() {
+  const fileStream = fs.createReadStream(logPath);
+  const rl = readline.createInterface({
+    input: fileStream,
+    crlfDelay: Infinity
+  });
+
+  for await (const line of rl) {
+    if (line.includes('router.get(\'/realtime/places\'') || line.includes('router.get("/realtime/places"')) {
+      console.log('--- FOUND MATCH ---');
+      console.log(line.substring(0, 1000)); // Show part of the line
+      // Let's parse and find the full content if it is a write or replace tool
+      const data = JSON.parse(line);
+      if (data.tool_calls) {
+        console.log(JSON.stringify(data.tool_calls, null, 2));
+      } else if (data.content && data.content.includes('router.get')) {
+        console.log('Content preview:', data.content.substring(0, 2000));
+      }
+    }
+  }
+}
+
+search();

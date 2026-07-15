@@ -60,18 +60,13 @@ const EventsSlider: React.FC = () => {
   return (
     <section className="py-16 bg-gradient-to-b from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 overflow-hidden">
       <div className="container mx-auto px-4">
-        <div className="flex justify-between items-end mb-10">
-          <div>
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-              Live & Upcoming Events
-            </h2>
-            <p className="text-gray-600 dark:text-gray-400 max-w-2xl">
-              Discover the most exciting festivals, parties, and cultural events happening in Goa right now.
-            </p>
-          </div>
-          <Link to="/events" className="hidden md:flex items-center text-teal-600 dark:text-teal-400 hover:text-teal-700 font-medium">
-            View All Events <ExternalLink className="ml-2 w-4 h-4" />
-          </Link>
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+            Live & Upcoming Events
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+            Discover the most exciting festivals, parties, and cultural events happening in Goa right now.
+          </p>
         </div>
 
         <div className="flex overflow-x-auto pb-8 -mx-4 px-4 snap-x snap-mandatory hide-scrollbar gap-6">
@@ -119,8 +114,8 @@ const EventsSlider: React.FC = () => {
           ))}
         </div>
         
-        <div className="mt-6 md:hidden text-center">
-          <Link to="/events" className="inline-flex items-center text-teal-600 dark:text-teal-400 font-medium">
+        <div className="mt-10 text-center">
+          <Link to="/events" className="inline-flex items-center bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg shadow-md hover:shadow-blue-500/20 transition-all">
             View All Events <ExternalLink className="ml-2 w-4 h-4" />
           </Link>
         </div>
