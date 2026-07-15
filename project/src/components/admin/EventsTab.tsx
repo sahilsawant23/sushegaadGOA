@@ -39,7 +39,7 @@ export const EventsTab: React.FC<{ events: Event[], onUpdate: () => void, token:
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            const res = await fetch(`${API_BASE_URL}/admin/events`, {
+            const res = await fetch(`${API_BASE_URL}/events`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
                 body: JSON.stringify(newEvent)
@@ -60,7 +60,7 @@ export const EventsTab: React.FC<{ events: Event[], onUpdate: () => void, token:
     const handleDelete = async (id: number) => {
         if (!confirm('Are you sure you want to delete this event?')) return;
         try {
-            await fetch(`${API_BASE_URL}/admin/events/${id}`, {
+            await fetch(`${API_BASE_URL}/events/${id}`, {
                 method: 'DELETE',
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -73,7 +73,7 @@ export const EventsTab: React.FC<{ events: Event[], onUpdate: () => void, token:
     const handleSync = async () => {
         setIsSyncing(true);
         try {
-            const res = await fetch(`${API_BASE_URL}/admin/events/sync`, {
+            const res = await fetch(`${API_BASE_URL}/events/sync`, {
                 method: 'POST',
                 headers: { Authorization: `Bearer ${token}` }
             });

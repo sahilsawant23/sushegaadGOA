@@ -50,6 +50,7 @@ import HiddenGems from './pages/HiddenGems';
 import HiddenGemDetails from './pages/HiddenGemDetails';
 import PlaceDetails from './pages/PlaceDetails';
 import RegionDetails from './pages/RegionDetails';
+import AITripPlanner from './pages/AITripPlanner';
 
 const AppContent = () => {
   const location = useLocation();
@@ -80,6 +81,7 @@ const AppContent = () => {
           <Route path="/nightlife" element={<RealtimeExplorer />} />
           <Route path="/nightlife/:id" element={<PlaceDetails />} />
           <Route path="/places" element={<RealtimeExplorer />} />
+          <Route path="/ai-planner" element={<AITripPlanner />} />
 
           <Route path="/events" element={<Events />} />
           <Route path="/events/:id" element={<EventDetails />} />

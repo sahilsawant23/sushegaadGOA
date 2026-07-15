@@ -1500,6 +1500,258 @@ router.put('/admin/guides/:id/verify', authenticateToken, async (req, res) => {
   }
 });
 
+
+// --- AI ITINERARY PLANNER ROUTE ---
+router.post('/ai/plan-itinerary', async (req, res) => {
+  const { days, budget, interests } = req.body;
+  if (!days || !budget) {
+    return res.status(400).json({ message: 'Missing required fields' });
+  }
+
+  try {
+    const conn = await pool.getConnection();
+    // Fetch all internal destinations to feed into the AI context (including ID and Category for linking)
+    const [destinations] = await conn.execute('SELECT id, name, region, category, description FROM destinations');
+    conn.release();
+
+    // If Gemini API Key is provided, call Google Gemini to plan the itinerary
+    if (process.env.GEMINI_API_KEY) {
+      try {
+        const prompt = `Create a detailed ${days}-day itinerary for a trip to Goa.
+Budget: ${budget}
+Interests: ${interests}
+
+Here is a list of internal places on our website that you MUST prioritize suggesting first:
+${JSON.stringify(destinations)}
+
+Combine these internal places with other real-time external attractions, activities, and dining places in Goa. 
+Mark internal places as type "internal" and external places as type "external".
+For internal places, you MUST include the correct 'placeId' (from the provided list) and 'placeCategory' (from the provided list, e.g. "beach", "temple", "church", "waterfall", "culture", "authentic").
+
+For EVERY activity, you MUST estimate a realistic 'budget' range (e.g. "₹500 - ₹1500") and a realistic 'distance' (e.g. "5 km from center" or "10 km from previous activity").
+Format the output as JSON matching the schema.`;
+
+        const response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${process.env.GEMINI_API_KEY}`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              contents: [
+                {
+                  parts: [
+                    {
+                      text: prompt
+                    }
+                  ]
+                }
+              ],
+              generationConfig: {
+                responseMimeType: "application/json",
+                responseSchema: {
+                  type: "OBJECT",
+                  properties: {
+                    itinerary: {
+                      type: "ARRAY",
+                      items: {
+                        type: "OBJECT",
+                        properties: {
+                          day: { type: "INTEGER" },
+                          title: { type: "STRING" },
+                          activities: {
+                            type: "ARRAY",
+                            items: {
+                              type: "OBJECT",
+                              properties: {
+                                time: { type: "STRING" },
+                                place: { type: "STRING" },
+                                description: { type: "STRING" },
+                                budget: { type: "STRING" },
+                                distance: { type: "STRING" },
+                                type: { type: "STRING", enum: ["internal", "external"] },
+                                placeId: { type: "INTEGER" },
+                                placeCategory: { type: "STRING" }
+                              },
+                              required: ["time", "place", "description", "budget", "distance", "type"]
+                            }
+                          }
+                        },
+                        required: ["day", "title", "activities"]
+                      }
+                    }
+                  },
+                  required: ["itinerary"]
+                }
+              }
+            })
+          }
+        );
+
+        if (!response.ok) {
+          const errText = await response.text();
+          throw new Error(`Gemini API failed: ${response.statusText} - ${errText}`);
+        }
+
+        const result = await response.json();
+        if (result.candidates && result.candidates[0] && result.candidates[0].content && result.candidates[0].content.parts[0]) {
+          const generatedData = JSON.parse(result.candidates[0].content.parts[0].text);
+          return res.json({ 
+            itinerary: generatedData.itinerary, 
+            message: 'Trip itinerary generated in real-time by Gemini AI!' 
+          });
+        }
+      } catch (geminiError) {
+        console.error('Failed to generate using live Gemini API, falling back to mock generator:', geminiError);
+      }
+    }
+
+    // FALLBACK MOCK ITINERARY (if no key is provided, or API call fails)
+    const localSpots = destinations.length > 0 ? destinations : [
+      { id: 1, name: 'Calangute Beach', category: 'Beach', description: 'Queen of Beaches with water sports and lively shacks.' },
+      { id: 2, name: 'Dudhsagar Waterfalls', category: 'Waterfall', description: 'Stunning four-tiered waterfall on the Mandovi River.' },
+      { id: 3, name: 'Basilica of Bom Jesus', category: 'Church', description: 'UNESCO World Heritage church containing relic of St. Francis Xavier.' }
+    ];
+
+    const itinerary = Array.from({ length: days }).map((_, i) => {
+      const spot = localSpots[i % localSpots.length];
+      return {
+        day: i + 1,
+        title: `Day ${i + 1}: Discovering ${spot.name}`,
+        activities: [
+          {
+            time: 'Morning',
+            place: spot.name,
+            description: spot.description,
+            budget: '₹0 - ₹200',
+            distance: '10 km from center',
+            type: 'internal',
+            placeId: spot.id,
+            placeCategory: spot.category ? spot.category.toLowerCase() : 'beach'
+          },
+          {
+            time: 'Afternoon',
+            place: i % 2 === 0 ? 'Thalassa Restaurant (Siolim)' : 'Gunpowder (Anjuna)',
+            description: 'Enjoy delicious meals at this highly rated external restaurant in Goa.',
+            budget: '₹800 - ₹1500',
+            distance: '15 km from morning spot',
+            type: 'external'
+          },
+          {
+            time: 'Evening',
+            place: i % 2 === 0 ? 'Sunset at Anjuna Beach' : 'Cruising down Mandovi River',
+            description: 'Relax and unwind with beautiful scenic views.',
+            budget: '₹200 - ₹500',
+            distance: '5 km from lunch spot',
+            type: 'internal',
+            placeId: 1,
+            placeCategory: 'beach'
+          }
+        ]
+      };
+    });
+
+    res.json({ 
+      itinerary, 
+      message: 'AI Plan generated successfully (Fallback Mock Mode. Set GEMINI_API_KEY in backend/.env for real AI!)' 
+    });
+  } catch (error) {
+    console.error('AI Planner error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// --- EVENTS MANAGEMENT ROUTES ---
+router.get('/events/live', async (req, res) => {
+  try {
+    const conn = await pool.getConnection();
+    const [events] = await conn.execute(
+      'SELECT * FROM events WHERE status = "published" AND (end_date >= NOW() OR (end_date IS NULL AND start_date >= DATE_SUB(NOW(), INTERVAL 1 DAY))) ORDER BY start_date ASC LIMIT 10'
+    );
+    conn.release();
+    res.json(events);
+  } catch (error) {
+    console.error('Fetch live events error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+router.get('/events', async (req, res) => {
+  const { upcoming } = req.query;
+  try {
+    const conn = await pool.getConnection();
+    let query = 'SELECT * FROM events';
+    
+    if (upcoming === 'true') {
+      query += ' WHERE status = "published" AND (end_date >= NOW() OR (end_date IS NULL AND start_date >= DATE_SUB(NOW(), INTERVAL 1 DAY)))';
+    }
+    
+    query += ' ORDER BY start_date DESC';
+    const [events] = await conn.execute(query);
+    conn.release();
+    res.json(events);
+  } catch (error) {
+    console.error('Fetch all events error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+router.post('/events', async (req, res) => {
+  const { title, description, start_date, end_date, location, image_url, category, price, source, status } = req.body;
+  if (!title || !start_date) {
+    return res.status(400).json({ message: 'Title and start date are required' });
+  }
+  
+  try {
+    const conn = await pool.getConnection();
+    const [result] = await conn.execute(
+      'INSERT INTO events (title, description, start_date, end_date, location, image_url, category, price, source, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [title, description || null, start_date, end_date || null, location || null, image_url || null, category || null, price || null, source || 'manual', status || 'published']
+    );
+    conn.release();
+    res.status(201).json({ message: 'Event created successfully', id: result.insertId });
+  } catch (error) {
+    console.error('Create event error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+router.put('/events/:id', async (req, res) => {
+  const { id } = req.params;
+  const { title, description, start_date, end_date, location, image_url, category, price, status } = req.body;
+  
+  try {
+    const conn = await pool.getConnection();
+    await conn.execute(
+      'UPDATE events SET title=?, description=?, start_date=?, end_date=?, location=?, image_url=?, category=?, price=?, status=? WHERE id=?',
+      [title, description, start_date, end_date, location, image_url, category, price, status, id]
+    );
+    conn.release();
+    res.json({ message: 'Event updated successfully' });
+  } catch (error) {
+    console.error('Update event error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+router.delete('/events/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const conn = await pool.getConnection();
+    await conn.execute('DELETE FROM events WHERE id=?', [id]);
+    conn.release();
+    res.json({ message: 'Event deleted successfully' });
+  } catch (error) {
+    console.error('Delete event error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+router.post('/events/sync', async (req, res) => {
+  res.json({ message: 'Events synced successfully (mock)' });
+});
+
 module.exports = router;
 // --- CONTACT & MESSAGES ---
 

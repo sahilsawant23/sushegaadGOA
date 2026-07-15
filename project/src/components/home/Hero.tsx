@@ -47,13 +47,19 @@ const Hero: React.FC = () => {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
             <Link
               to="/events"
-              className="bg-white/10 hover:bg-white/20 text-white border border-white/50 backdrop-blur-sm px-8 py-3 rounded-full font-semibold text-lg transition-all transform hover:scale-105 flex items-center justify-center min-w-[200px]"
+              className="bg-white/10 hover:bg-white/20 text-white border border-white/50 backdrop-blur-sm px-8 py-3 rounded-full font-semibold text-lg transition-all transform hover:scale-105 flex items-center justify-center min-w-[180px]"
             >
               Upcoming Events
             </Link>
             <Link
+              to="/ai-planner"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-full font-semibold text-lg transition-all transform hover:scale-105 shadow-lg hover:shadow-blue-500/30 flex items-center justify-center min-w-[180px]"
+            >
+              AI Trip Planner
+            </Link>
+            <Link
               to="/hidden-gems"
-              className="bg-amber-500/80 hover:bg-amber-500 text-white backdrop-blur-sm px-8 py-3 rounded-full font-semibold text-lg transition-all transform hover:scale-105 shadow-lg hover:shadow-amber-500/30 flex items-center justify-center min-w-[200px]"
+              className="bg-amber-500/80 hover:bg-amber-500 text-white backdrop-blur-sm px-8 py-3 rounded-full font-semibold text-lg transition-all transform hover:scale-105 shadow-lg hover:shadow-amber-500/30 flex items-center justify-center min-w-[180px]"
             >
               Hidden Gems
             </Link>
