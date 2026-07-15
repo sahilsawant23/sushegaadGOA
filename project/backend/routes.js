@@ -4,10 +4,16 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const mysql = require('mysql2/promise');
 const path = require('path');
+const Razorpay = require('razorpay');
 const router = express.Router();
 
 const pool = require('./db');
 const emailService = require('./emailService');
+
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_TDstsI3dZOt2yf',
+  key_secret: process.env.RAZORPAY_KEY_SECRET || 'Hi37f2lPKeNrHW4RiGob90mP'
+});
 
 const jwtSecret = process.env.JWT_SECRET || 's3cr3tK3y!@';
 
@@ -444,7 +450,7 @@ router.get('/tours/:id', async (req, res) => {
   }
 });
 
-// Create booking (protected)
+// Create booking (protected, initialized with Razorpay payment details)
 router.post('/bookings', authenticateToken, async (req, res) => {
   const { tourId, bookingDate, totalPrice, guests } = req.body;
   if (!tourId || !bookingDate || !totalPrice) {
@@ -463,33 +469,99 @@ router.post('/bookings', authenticateToken, async (req, res) => {
       tourTitle = tours.length > 0 ? tours[0].title : 'Unknown Tour';
     }
 
-    // Fetch user details for email
+    // Fetch user details for email prefills
     const [users] = await conn.execute('SELECT full_name, email FROM users WHERE id = ?', [req.user.userId]);
     const user = users[0];
 
+    // Create booking in "pending" status until payment completes
     const [result] = await conn.execute(
-      'INSERT INTO bookings (user_id, tour_id, booking_date, total_price, guests, booked_tour_title) VALUES (?, ?, ?, ?, ?, ?)',
+      'INSERT INTO bookings (user_id, tour_id, booking_date, total_price, guests, booked_tour_title, status) VALUES (?, ?, ?, ?, ?, ?, "pending")',
       [req.user.userId, String(tourId), bookingDate, totalPrice, guests || 1, tourTitle]
     );
 
-    // Send email asynchronously (fire and forget)
+    const bookingId = result.insertId;
+
+    // Create a Razorpay Order
+    const options = {
+      amount: Math.round(totalPrice * 100), // in paise (e.g. ₹1000 = 100000 paise)
+      currency: 'INR',
+      receipt: `booking_${bookingId}`
+    };
+
+    const order = await razorpay.orders.create(options);
+
+    conn.release();
+    res.status(201).json({
+      message: 'Booking initialized. Complete payment to confirm.',
+      bookingId,
+      razorpayOrderId: order.id,
+      amount: order.amount,
+      currency: order.currency,
+      keyId: process.env.RAZORPAY_KEY_ID || 'rzp_test_TDstsI3dZOt2yf',
+      user: {
+        name: user ? user.full_name : '',
+        email: user ? user.email : ''
+      }
+    });
+  } catch (error) {
+    console.error('Booking creation error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Verify payment signature and confirm booking (protected)
+router.post('/payments/verify', authenticateToken, async (req, res) => {
+  const { bookingId, razorpayPaymentId, razorpayOrderId, razorpaySignature } = req.body;
+  if (!bookingId || !razorpayPaymentId || !razorpayOrderId || !razorpaySignature) {
+    return res.status(400).json({ message: 'Missing payment details' });
+  }
+
+  try {
+    // Generate signature locally to verify integrity
+    const generatedSignature = crypto
+      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET || 'Hi37f2lPKeNrHW4RiGob90mP')
+      .update(razorpayOrderId + '|' + razorpayPaymentId)
+      .digest('hex');
+
+    if (generatedSignature !== razorpaySignature) {
+      return res.status(400).json({ message: 'Payment verification failed (Signature mismatch)' });
+    }
+
+    const conn = await pool.getConnection();
+
+    // Fetch booking details
+    const [bookings] = await conn.execute('SELECT * FROM bookings WHERE id = ?', [bookingId]);
+    if (bookings.length === 0) {
+      conn.release();
+      return res.status(404).json({ message: 'Booking not found' });
+    }
+    const booking = bookings[0];
+
+    // Update booking status to "confirmed"
+    await conn.execute('UPDATE bookings SET status = "confirmed" WHERE id = ?', [bookingId]);
+
+    // Send confirmation email
+    const [users] = await conn.execute('SELECT full_name, email FROM users WHERE id = ?', [req.user.userId]);
+    const user = users[0];
+
     const bookingDetails = {
-      booking_date: bookingDate,
-      guests: guests || 1,
-      total_price: totalPrice
+      booking_date: booking.booking_date,
+      guests: booking.guests || 1,
+      total_price: booking.total_price
     };
     const tourDetails = {
-      title: tourTitle
+      title: booking.booked_tour_title
     };
 
     if (user) {
-      emailService.sendBookingConfirmation(bookingDetails, tourDetails, user).catch(err => console.error('Email send failed:', err));
+      emailService.sendBookingConfirmation(bookingDetails, tourDetails, user)
+        .catch(err => console.error('Payment confirmation email failed:', err));
     }
 
     conn.release();
-    res.status(201).json({ message: 'Booking created successfully' });
+    res.json({ success: true, message: 'Payment verified and booking confirmed successfully!' });
   } catch (error) {
-    console.error('Booking error:', error);
+    console.error('Payment verification error:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });
@@ -2223,6 +2295,21 @@ const reviewsPool = {
 router.get('/realtime/places', async (req, res) => {
   const { category, region, search } = req.query;
   const axios = require('axios');
+  
+  const firstNames = ['Vikram', 'Sarah', 'Rahul', 'Elena', 'Amit', 'Riya', 'John', 'Pooja', 'Sam', 'Neha', 'Chris', 'Anita', 'Raj', 'Emma'];
+  const lastNames = ['Mehta', 'Connor', 'Deshmukh', 'Gilbert', 'Sharma', 'Sen', 'Doe', 'Hegde', 'Wilson', 'Kakkar', 'Evans', 'Nair', 'Patel', 'Watson'];
+  const reviewTexts = [
+    'Amazing experience! Would definitely come back.',
+    'Great place, friendly staff and lovely vibe.',
+    'Absolutely loved it. Highly recommended for anyone visiting Goa.',
+    'A bit crowded, but the service was excellent.',
+    'Fantastic! Exceeded our expectations.',
+    'Very good ambiance and reasonable prices.',
+    'The best place in town! 5 stars all the way.',
+    'Nice place, decent food/drinks and good music.',
+    'Wonderful time here with friends.',
+    'Perfect spot to relax and enjoy the evening.'
+  ];
 
   const categoryMap = {
     hotels: [
@@ -2270,7 +2357,7 @@ area["name"="Goa"]->.searchArea;
 (
   ${typeClauses.join('\n  ')}
 );
-out body 80;`;
+out body 300;`;
 
   let places = [];
 
@@ -2379,14 +2466,14 @@ out body 80;`;
     // Cache results in DB
     const conn = await pool.getConnection();
 
-    const premiumCasinos = [
+        const premiumCasinos = [
       {
         id: 'premium-casino-1',
         name: 'Deltin Royale Casino',
         type: 'Casino',
-        location: 'Noah\'s Ark, RND Jetty, D. Bandodkar Marg, Panaji',
+        location: "Noah's Ark, RND Jetty, D. Bandodkar Marg, Panaji",
         region: 'North Goa',
-        description: 'India\'s largest and most luxurious floating casino. Offers a premium gaming experience, multi-cuisine dining, and live international entertainment on the Mandovi River.',
+        description: "India's largest and most luxurious floating casino. Offers a premium gaming experience, multi-cuisine dining, and live international entertainment on the Mandovi River.",
         priceRange: 'Luxury',
         openingHours: 'Open 24 Hours (24/7)',
         image: 'https://images.unsplash.com/photo-1596838132731-3301c3fd4317?w=800',
@@ -2439,6 +2526,126 @@ out body 80;`;
         reviewCount: 1540,
         latitude: 15.5030,
         longitude: 73.8270
+      },
+      {
+        id: 'premium-casino-5',
+        name: 'Casino Pride 2',
+        type: 'Casino',
+        location: 'River Mandovi, Panaji, Goa',
+        region: 'North Goa',
+        description: 'A popular floating casino offering a friendly atmosphere, live DJ music, international dancers, and a wide array of slots and table games.',
+        priceRange: 'Luxury',
+        openingHours: 'Open 24 Hours (24/7)',
+        image: 'https://images.unsplash.com/photo-1596838132731-3301c3fd4317?w=800',
+        rating: 4.4,
+        reviewCount: 1200,
+        latitude: 15.5022,
+        longitude: 73.8262
+      },
+      {
+        id: 'premium-casino-6',
+        name: 'Casino Strike by Deltin',
+        type: 'Casino',
+        location: 'Grand Hyatt Goa, Bambolim, Goa',
+        region: 'North Goa',
+        description: "India's largest land-based casino located in the luxury Grand Hyatt resort. Features state-of-the-art gaming, live performance stages, and gourmet dining.",
+        priceRange: 'Luxury',
+        openingHours: 'Open 24 Hours (24/7)',
+        image: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=800',
+        rating: 4.6,
+        reviewCount: 950,
+        latitude: 15.4590,
+        longitude: 73.8565
+      },
+      {
+        id: 'premium-casino-7',
+        name: 'Casino Carnival',
+        type: 'Casino',
+        location: 'Goa Marriott Resort & Spa, Miramar, Panaji',
+        region: 'North Goa',
+        description: 'A premium land-based casino offering a refined gaming experience, excellent drinks, and slot machines in the upscale Marriott Resort.',
+        priceRange: 'Luxury',
+        openingHours: 'Open 24 Hours (24/7)',
+        image: 'https://images.unsplash.com/photo-1584132967334-10e028bd69f7?w=800',
+        rating: 4.3,
+        reviewCount: 780,
+        latitude: 15.4868,
+        longitude: 73.8095
+      },
+      {
+        id: 'premium-casino-8',
+        name: 'Casino Palms',
+        type: 'Casino',
+        location: 'La Calypso Hotel, Baga Beach, Goa',
+        region: 'North Goa',
+        description: 'A vibrant land-based casino on the busy Baga stretch, featuring a relaxed gaming environment with slots, roulette, and blackjack for beachgoers.',
+        priceRange: 'Mid-range',
+        openingHours: 'Open 24 Hours (24/7)',
+        image: 'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=800',
+        rating: 4.1,
+        reviewCount: 650,
+        latitude: 15.5552,
+        longitude: 73.7517
+      },
+      {
+        id: 'premium-casino-9',
+        name: 'Casino Paradise',
+        type: 'Casino',
+        location: 'Hotel Neo Majestic, Porvorim, Goa',
+        region: 'North Goa',
+        description: "One of Goa's oldest and most well-known land-based casinos, offering digital gaming stations, classic table slots, and upscale hospitality.",
+        priceRange: 'Mid-range',
+        openingHours: 'Open 24 Hours (24/7)',
+        image: 'https://images.unsplash.com/photo-1606167668584-78701c57f13d?w=800',
+        rating: 4.2,
+        reviewCount: 510,
+        latitude: 15.5225,
+        longitude: 73.8290
+      },
+      {
+        id: 'premium-casino-10',
+        name: 'Deltin Zuri',
+        type: 'Casino',
+        location: 'The Zuri White Sands Resort, Varca, South Goa',
+        region: 'South Goa',
+        description: 'A premium, classy casino located in South Goa within the Zuri White Sands Resort, offering a peaceful and upscale gaming environment for guests.',
+        priceRange: 'Luxury',
+        openingHours: 'Open 24 Hours (24/7)',
+        image: 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=800',
+        rating: 4.5,
+        reviewCount: 420,
+        latitude: 15.2155,
+        longitude: 73.9295
+      },
+      {
+        id: 'premium-casino-11',
+        name: 'Chances Casino & Resort',
+        type: 'Casino',
+        location: 'Vainguinim Valley Resort, Dona Paula, Goa',
+        region: 'North Goa',
+        description: 'A boutique land-based casino offering slots, live table games, conventional layout, and warm Goan hospitality in a quiet valley setting.',
+        priceRange: 'Mid-range',
+        openingHours: 'Open 24 Hours (24/7)',
+        image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800',
+        rating: 4.2,
+        reviewCount: 390,
+        latitude: 15.4578,
+        longitude: 73.8090
+      },
+      {
+        id: 'premium-casino-12',
+        name: 'Grand 7 Casino',
+        type: 'Casino',
+        location: 'The O Hotel, Candolim Beach, Goa',
+        region: 'North Goa',
+        description: 'A lively casino situated inside the O Hotel in Candolim, offering roulette, blackjack, slots, and live poolside entertainment.',
+        priceRange: 'Luxury',
+        openingHours: 'Open 24 Hours (24/7)',
+        image: 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=800',
+        rating: 4.3,
+        reviewCount: 490,
+        latitude: 15.5180,
+        longitude: 73.7610
       }
     ];
 
@@ -2494,20 +2701,6 @@ out body 80;`;
     conn.release();
 
     // Map reviewsList onto places elements
-    const firstNames = ['Vikram', 'Sarah', 'Rahul', 'Elena', 'Amit', 'Riya', 'John', 'Pooja', 'Sam', 'Neha', 'Chris', 'Anita', 'Raj', 'Emma'];
-    const lastNames = ['Mehta', 'Connor', 'Deshmukh', 'Gilbert', 'Sharma', 'Sen', 'Doe', 'Hegde', 'Wilson', 'Kakkar', 'Evans', 'Nair', 'Patel', 'Watson'];
-    const reviewTexts = [
-      'Amazing experience! Would definitely come back.',
-      'Great place, friendly staff and lovely vibe.',
-      'Absolutely loved it. Highly recommended for anyone visiting Goa.',
-      'A bit crowded, but the service was excellent.',
-      'Fantastic! Exceeded our expectations.',
-      'Very good ambiance and reasonable prices.',
-      'The best place in town! 5 stars all the way.',
-      'Nice place, decent food/drinks and good music.',
-      'Wonderful time here with friends.',
-      'Perfect spot to relax and enjoy the evening.'
-    ];
 
     places.forEach(p => {
       const userRevs = dbReviewsMap[p.id] || [];
@@ -2533,6 +2726,13 @@ out body 80;`;
     if (search) {
       places = places.filter(p => p.name.toLowerCase().includes(search.toLowerCase()) || p.location.toLowerCase().includes(search.toLowerCase()));
     }
+
+    // Sort by rating & review count descending (Famous places first)
+    places.sort((a, b) => {
+      const ratingDiff = parseFloat(b.rating) - parseFloat(a.rating);
+      if (ratingDiff !== 0) return ratingDiff;
+      return (b.reviewCount || 0) - (a.reviewCount || 0);
+    });
 
   } catch (apiError) {
     console.error('Overpass API call failed, falling back to database cache:', apiError.message);
@@ -2567,7 +2767,7 @@ out body 80;`;
       if (conditions.length > 0) {
         dbQuery += ' WHERE ' + conditions.join(' AND ');
       }
-      dbQuery += ' LIMIT 80';
+      dbQuery += ' ORDER BY rating DESC, review_count DESC LIMIT 300';
 
       const [rows] = await conn.execute(dbQuery, dbParams);
 

@@ -103,7 +103,7 @@ const AppContent = () => {
           <Route path="/profile" element={<Profile />} />
           <Route path="/booking/:tourId" element={<Booking />} />
           <Route path="/wishlist" element={<Wishlist />} />
-          <Route path="/my-bookings" element={<Bookings />} />
+          <Route path="/bookings" element={<Bookings />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/privacy" element={<Privacy />} />

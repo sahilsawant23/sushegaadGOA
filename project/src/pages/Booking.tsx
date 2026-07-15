@@ -204,8 +204,55 @@ const Booking: React.FC = () => {
       });
 
       if (response.ok) {
-        toast.success('Booking confirmed! You will receive a confirmation email shortly.');
-        navigate('/bookings'); // Redirect to My Bookings, not Dashboard, so they see it.
+        const data = await response.json();
+        
+        // Setup Razorpay Checkout options
+        const options = {
+          key: data.keyId,
+          amount: data.amount,
+          currency: data.currency,
+          name: "Sushegaad GOA",
+          description: `Booking for ${tour.title || 'Tour'}`,
+          order_id: data.razorpayOrderId,
+          handler: async function (paymentRes: any) {
+            try {
+              const verifyRes = await fetch('http://localhost:5000/api/payments/verify', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                  bookingId: data.bookingId,
+                  razorpayPaymentId: paymentRes.razorpay_payment_id,
+                  razorpayOrderId: paymentRes.razorpay_order_id,
+                  razorpaySignature: paymentRes.razorpay_signature
+                })
+              });
+              
+              if (verifyRes.ok) {
+                toast.success('Payment successful! Booking confirmed.');
+                navigate('/bookings');
+              } else {
+                const verifyErr = await verifyRes.json();
+                toast.error(verifyErr.message || 'Payment verification failed');
+              }
+            } catch (err) {
+              console.error(err);
+              toast.error('Payment verification request failed');
+            }
+          },
+          prefill: {
+            name: data.user?.name || '',
+            email: data.user?.email || ''
+          },
+          theme: {
+            color: "#2563eb"
+          }
+        };
+
+        const rzp = new (window as any).Razorpay(options);
+        rzp.open();
       } else {
         const err = await response.json();
         toast.error(err.message || 'Booking failed');
