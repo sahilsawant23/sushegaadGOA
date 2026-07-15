@@ -11,8 +11,8 @@ const pool = require('./db');
 const emailService = require('./emailService');
 
 const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_TDstsI3dZOt2yf',
-  key_secret: process.env.RAZORPAY_KEY_SECRET || 'Hi37f2lPKeNrHW4RiGob90mP'
+  key_id: process.env.RAZORPAY_KEY_ID,
+  key_secret: process.env.RAZORPAY_KEY_SECRET
 });
 
 const jwtSecret = process.env.JWT_SECRET || 's3cr3tK3y!@';
@@ -519,7 +519,7 @@ router.post('/payments/verify', authenticateToken, async (req, res) => {
   try {
     // Generate signature locally to verify integrity
     const generatedSignature = crypto
-      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET || 'Hi37f2lPKeNrHW4RiGob90mP')
+      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
       .update(razorpayOrderId + '|' + razorpayPaymentId)
       .digest('hex');
 
@@ -1821,7 +1821,7 @@ router.delete('/events/:id', async (req, res) => {
 });
 
 router.post('/events/sync', async (req, res) => {
-  const apiKey = process.env.TICKETMASTER_API_KEY || 'pzZubCxvpdduaWMmqCxHmGwrmG3hQx29';
+  const apiKey = process.env.TICKETMASTER_API_KEY;
   let syncedCount = 0;
 
   try {
