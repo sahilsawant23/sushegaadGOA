@@ -56,7 +56,7 @@ const AppContent = () => {
   const location = useLocation();
 
   // Routes where Navbar and Footer should be hidden
-  const hideLayout = ['/admin/dashboard', '/guide/dashboard'].some(path =>
+  const hideLayout = ['/admin/dashboard', '/guide/dashboard', '/dashboard'].some(path =>
     location.pathname.startsWith(path)
   );
 

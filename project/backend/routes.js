@@ -375,14 +375,168 @@ router.get('/destinations/:id', async (req, res) => {
 // Get destinations by category
 router.get('/destinations/category/:category', async (req, res) => {
   const { category } = req.params;
+  let conn;
   try {
-    const conn = await pool.getConnection();
+    conn = await pool.getConnection();
     const [rows] = await conn.execute('SELECT * FROM destinations WHERE category = ? ORDER BY created_at DESC', [category]);
-    conn.release();
+
+    if (category === 'Hidden Gem') {
+      const axios = require('axios');
+      let realtimeGems = [];
+      
+      const waterfallImages = [
+        'https://images.unsplash.com/photo-1622306236966-28564db4430e?w=800&q=80',
+        'https://images.unsplash.com/photo-1546182990-dffeafbe841d?w=800&q=80',
+        'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=800&q=80'
+      ];
+      const caveImages = [
+        'https://images.unsplash.com/photo-1564507592333-c60657eea523?w=800&q=80',
+        'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80'
+      ];
+      const springImages = [
+        'https://images.unsplash.com/photo-1548574505-5e239809ee19?w=800&q=80',
+        'https://images.unsplash.com/photo-1582294154848-8df090c2e42c?w=800&q=80'
+      ];
+      const fortImages = [
+        'https://images.unsplash.com/photo-1598424268600-4743285c5314?w=800&q=80',
+        'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=800&q=80'
+      ];
+      const natureImages = [
+        'https://images.unsplash.com/photo-1626354674063-8a3fc42d765d?w=800&q=80',
+        'https://images.unsplash.com/photo-1590050752117-238cb0fb12b1?w=800&q=80',
+        'https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?w=800&q=80'
+      ];
+
+      try {
+        const typeClauses = [
+          'node["waterway"="waterfall"](area.searchArea);',
+          'node["natural"="cave_entrance"](area.searchArea);',
+          'node["natural"="spring"](area.searchArea);',
+          'node["historic"="fort"](area.searchArea);',
+          'node["historic"="ruins"](area.searchArea);',
+          'node["tourism"="viewpoint"](area.searchArea);',
+          'node["tourism"="attraction"]["nature"="yes"](area.searchArea);'
+        ];
+        
+        const query = `[out:json][timeout:15];
+area["name"="Goa"]->.searchArea;
+(
+  ${typeClauses.join('\n  ')}
+);
+out body 100;`;
+
+        const response = await axios.get('https://overpass-api.de/api/interpreter', {
+          params: { data: query },
+          headers: { 'User-Agent': 'GoaTourismPlatform/1.0 (sahilsawant094@gmail.com)' }
+        });
+
+        const elements = response.data.elements || [];
+        
+        for (const el of elements) {
+          const tags = el.tags || {};
+          if (!tags.name) continue;
+
+          const osmId = `osm-${el.id}`;
+          const name = tags.name;
+          const lat = el.lat;
+          const lon = el.lon;
+          const region = lat >= 15.45 ? 'North Goa' : 'South Goa';
+
+          let type = 'Viewpoint';
+          let image_url = natureImages[el.id % natureImages.length];
+          
+          if (tags.waterway === 'waterfall') {
+            type = 'Waterfall';
+            image_url = waterfallImages[el.id % waterfallImages.length];
+          } else if (tags.natural === 'cave_entrance') {
+            type = 'Cave';
+            image_url = caveImages[el.id % caveImages.length];
+          } else if (tags.natural === 'spring') {
+            type = 'Spring';
+            image_url = springImages[el.id % springImages.length];
+          } else if (tags.historic === 'fort' || tags.historic === 'ruins') {
+            type = 'Historical Site';
+            image_url = fortImages[el.id % fortImages.length];
+          }
+
+          const description = tags.description || `A scenic ${type.toLowerCase()} located in ${region}, Goa. Discovered via live OpenStreetMap location data, it offers an authentic, off-the-beaten-path experience for adventure seekers.`;
+          const locationStr = tags['addr:place'] || tags['addr:suburb'] || tags['addr:city'] || `${region}, Goa`;
+
+          const detailsObj = {
+            location: locationStr,
+            bestTime: type === 'Waterfall' ? 'Monsoon (June to Sept)' : 'Winter & Post-Monsoon (Nov to Feb)',
+            difficulty: type === 'Waterfall' || type === 'Cave' ? 'Moderate' : 'Easy',
+            highlights: ['Scenic scenic views', 'Untouched natural beauty', 'Photographer paradise']
+          };
+
+          // Cache in database
+          await conn.execute(`
+            INSERT INTO realtime_places_cache (id, name, type, location, region, description, price_range, opening_hours, image, rating, review_count, latitude, longitude)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON DUPLICATE KEY UPDATE
+            name = VALUES(name), type = VALUES(type), location = VALUES(location), region = VALUES(region),
+            description = VALUES(description), price_range = VALUES(price_range), opening_hours = VALUES(opening_hours),
+            image = VALUES(image), rating = VALUES(rating), review_count = VALUES(review_count),
+            latitude = VALUES(latitude), longitude = VALUES(longitude)
+          `, [
+            osmId, name, `Hidden Gem (${type})`, locationStr, region, description, 
+            'Budget', 'Daylight Hours', image_url, 4.6, 28 + (el.id % 45), lat, lon
+          ]);
+
+          realtimeGems.push({
+            id: osmId,
+            name: name,
+            region: region,
+            description: description,
+            category: 'Hidden Gem',
+            latitude: lat,
+            longitude: lon,
+            image_url: image_url,
+            gallery_images: JSON.stringify([image_url]),
+            details: detailsObj,
+            created_at: new Date()
+          });
+        }
+      } catch (err) {
+        console.error('Failed to fetch real-time OSM hidden gems, reading cache...', err);
+        try {
+          const [cachedRows] = await conn.execute(`
+            SELECT * FROM realtime_places_cache 
+            WHERE type LIKE 'Hidden Gem%'
+          `);
+          realtimeGems = cachedRows.map(r => ({
+            id: r.id,
+            name: r.name,
+            region: r.region,
+            description: r.description,
+            category: 'Hidden Gem',
+            latitude: r.latitude,
+            longitude: r.longitude,
+            image_url: r.image,
+            gallery_images: JSON.stringify([r.image]),
+            details: {
+              location: r.location,
+              bestTime: r.type.includes('Waterfall') ? 'Monsoon (June to Sept)' : 'Winter & Post-Monsoon (Nov to Feb)',
+              difficulty: r.type.includes('Waterfall') || r.type.includes('Cave') ? 'Moderate' : 'Easy',
+              highlights: ['Scenic views', 'Untouched natural beauty', 'Photographer paradise']
+            },
+            created_at: new Date()
+          }));
+        } catch (cacheErr) {
+          console.error('Failed to read from cache:', cacheErr);
+        }
+      }
+
+      res.json([...rows, ...realtimeGems]);
+      return;
+    }
+
     res.json(rows);
   } catch (error) {
     console.error('Destinations by category error:', error);
     res.status(500).json({ message: 'Internal server error' });
+  } finally {
+    if (conn) conn.release();
   }
 });
 

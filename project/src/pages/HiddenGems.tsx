@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 interface Gem {
-    id: number;
+    id: number | string;
     name: string;
     description: string;
     image_url: string;
