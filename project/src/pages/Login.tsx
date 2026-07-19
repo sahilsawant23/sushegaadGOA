@@ -22,13 +22,13 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 
-type RoleOption = 'traveler' | 'guide' | 'admin';
+type RoleOption = 'traveler' | 'guide';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { signIn, adminSignIn, signInWithGoogle, signInWithFacebook, state } = useAuth();
-
+  
   const [showPassword, setShowPassword] = useState(false);
   const [selectedRole, setSelectedRole] = useState<RoleOption>('traveler');
   const [formData, setFormData] = useState({
@@ -69,28 +69,19 @@ const Login: React.FC = () => {
     }
   ];
 
-  // Role Configurations
+  // Role Configurations (Public options only)
   const roleConfigs = {
     traveler: {
       label: "Traveler",
       icon: Compass,
       subtitle: "Book tours & plan trips",
-      email: "user@example.com",
-      color: "blue"
+      email: "user@example.com"
     },
     guide: {
       label: "Local Guide",
       icon: UserCheck,
       subtitle: "Host tours & experiences",
-      email: "guide@example.com",
-      color: "emerald"
-    },
-    admin: {
-      label: "Admin",
-      icon: ShieldCheck,
-      subtitle: "Platform management",
-      email: "admin@example.com",
-      color: "amber"
+      email: "guide@example.com"
     }
   };
 
@@ -117,15 +108,20 @@ const Login: React.FC = () => {
     e.preventDefault();
     try {
       let profile;
-      if (selectedRole === 'admin') {
-        await adminSignIn(formData.email, formData.password);
-        navigate('/admin/dashboard', { replace: true });
-        return;
-      } else {
+      try {
         profile = await signIn(formData.email, formData.password);
+      } catch (err) {
+        // Fallback: Check if credentials belong to admin endpoint
+        try {
+          await adminSignIn(formData.email, formData.password);
+          navigate('/admin/dashboard', { replace: true });
+          return;
+        } catch (adminErr) {
+          throw err;
+        }
       }
 
-      if (profile && profile.role === 'admin') {
+      if (profile && (profile.role === 'admin' || profile.isAdmin)) {
         navigate('/admin/dashboard', { replace: true });
       } else if (profile && profile.role === 'guide') {
         navigate('/guide/dashboard', { replace: true });
@@ -133,7 +129,7 @@ const Login: React.FC = () => {
         navigate(returnTo, { replace: true });
       }
     } catch (error) {
-      // Handled in Auth Context Toast
+      // Toast message handled in Auth Context
     }
   };
 
@@ -212,7 +208,7 @@ const Login: React.FC = () => {
                 </button>
               </div>
 
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 {(Object.keys(roleConfigs) as RoleOption[]).map((role) => {
                   const Icon = roleConfigs[role].icon;
                   const isSelected = selectedRole === role;
@@ -317,9 +313,6 @@ const Login: React.FC = () => {
                     Remember me
                   </span>
                 </label>
-                <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800">
-                  {selectedRole.toUpperCase()} MODE
-                </span>
               </div>
 
               <motion.button
@@ -333,7 +326,7 @@ const Login: React.FC = () => {
                   <span>Signing in...</span>
                 ) : (
                   <>
-                    <span>Sign In to {roleConfigs[selectedRole].label} Portal</span>
+                    <span>Sign In</span>
                     <Sparkles className="h-4 w-4" />
                   </>
                 )}
