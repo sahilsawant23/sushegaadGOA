@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Users, Calendar, DollarSign, TrendingUp, Eye, Trash2, LogOut, Search, FileDown, 
-  Plus, X, Shield, Menu, Power, Sparkles, Star, MessageSquare, Clock, MapPin, 
+import {
+  Users, Calendar, DollarSign, TrendingUp, Eye, Trash2, LogOut, Search, FileDown,
+  Plus, X, Shield, Menu, Power, Sparkles, Star, MessageSquare, Clock, MapPin,
   Settings, Award, HelpCircle, Phone, FileText, CheckCircle, AlertCircle, ArrowUpRight
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -43,6 +43,10 @@ interface Analytics {
 }
 
 interface Guide {
+  is_verified: any;
+  languages: ReactNode;
+  experience_years: ReactNode;
+  whatsapp_number: string;
   id: number;
   name: string;
   contact: string;
@@ -301,14 +305,14 @@ const AdminDashboard: React.FC = () => {
       <button
         onClick={() => { setActiveTab(id); setMenuOpen(false); }}
         className={`relative w-full flex items-center space-x-3 px-5 py-3.5 rounded-xl text-sm font-medium transition-all group duration-200
-        ${isSelected 
-          ? 'text-indigo-650 dark:text-indigo-400 bg-indigo-50/75 dark:bg-indigo-950/40 shadow-sm font-semibold' 
-          : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100/70 dark:hover:bg-slate-800/40 hover:text-slate-900 dark:hover:text-slate-200'}`}
+        ${isSelected
+            ? 'text-indigo-650 dark:text-indigo-400 bg-indigo-50/75 dark:bg-indigo-950/40 shadow-sm font-semibold'
+            : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100/70 dark:hover:bg-slate-800/40 hover:text-slate-900 dark:hover:text-slate-200'}`}
       >
         <Icon size={20} className={`${isSelected ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-500 group-hover:text-indigo-500 transition-colors'}`} />
         <span>{label}</span>
         {isSelected && (
-          <motion.div 
+          <motion.div
             layoutId="activeTabGlow"
             className="absolute right-0 top-3 bottom-3 w-1 bg-indigo-650 dark:bg-indigo-400 rounded-full"
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
@@ -343,7 +347,7 @@ const AdminDashboard: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 flex flex-col md:flex-row font-sans transition-colors duration-200">
-      
+
       {/* Sidebar Desktop */}
       <aside className="hidden md:flex flex-col w-72 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-r border-slate-200/50 dark:border-slate-800/50 fixed h-full z-10">
         <div className="p-6 border-b border-slate-200/50 dark:border-slate-800/50 flex items-center space-x-3">
@@ -366,15 +370,15 @@ const AdminDashboard: React.FC = () => {
         </nav>
 
         <div className="p-4 border-t border-slate-200/50 dark:border-slate-800/50 space-y-2">
-          <button 
-            onClick={() => navigate('/')} 
+          <button
+            onClick={() => navigate('/')}
             className="w-full flex items-center justify-center space-x-2 py-2.5 px-4 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all active:scale-[0.98]"
           >
             <MapPin size={15} className="text-indigo-500" />
             <span>Go to Live Website</span>
           </button>
-          <button 
-            onClick={async () => { await signOut(); navigate('/login'); }} 
+          <button
+            onClick={async () => { await signOut(); navigate('/login'); }}
             className="w-full flex items-center justify-center space-x-2 py-2.5 px-4 rounded-xl border border-transparent text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-all active:scale-[0.98]"
           >
             <Power size={15} />
@@ -391,8 +395,8 @@ const AdminDashboard: React.FC = () => {
           </div>
           <h1 className="font-bold text-slate-900 dark:text-white leading-tight">Admin System</h1>
         </div>
-        <button 
-          onClick={() => setMenuOpen(!menuOpen)} 
+        <button
+          onClick={() => setMenuOpen(!menuOpen)}
           className="p-2 text-slate-600 dark:text-slate-400 hover:text-indigo-500 transition-colors"
         >
           {menuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -402,7 +406,7 @@ const AdminDashboard: React.FC = () => {
       {/* Mobile Menu Dropdown */}
       <AnimatePresence>
         {menuOpen && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
@@ -413,15 +417,15 @@ const AdminDashboard: React.FC = () => {
                 <SidebarItem key={item.id} id={item.id} icon={item.icon} label={item.label} />
               ))}
               <hr className="my-3 border-slate-200 dark:border-slate-800" />
-              <button 
-                onClick={() => navigate('/')} 
+              <button
+                onClick={() => navigate('/')}
                 className="w-full flex items-center space-x-3 px-5 py-3 rounded-xl text-slate-700 dark:text-slate-300 text-sm font-medium hover:bg-slate-100"
               >
                 <MapPin size={20} className="text-indigo-500" />
                 <span>Live Website</span>
               </button>
-              <button 
-                onClick={async () => { await signOut(); navigate('/login'); }} 
+              <button
+                onClick={async () => { await signOut(); navigate('/login'); }}
                 className="w-full flex items-center space-x-3 px-5 py-3 rounded-xl text-rose-600 dark:text-rose-400 text-sm font-medium hover:bg-rose-50"
               >
                 <Power size={20} />
@@ -434,7 +438,7 @@ const AdminDashboard: React.FC = () => {
 
       {/* Main Workspace Frame */}
       <div className="flex-1 md:ml-72 flex flex-col min-h-screen">
-        
+
         {/* Desk Header Bar */}
         <header className="bg-white/50 dark:bg-slate-900/30 px-8 py-5 hidden md:flex justify-between items-center border-b border-slate-200/30 dark:border-slate-800/10">
           <div>
@@ -459,10 +463,10 @@ const AdminDashboard: React.FC = () => {
         </header>
 
         <main className="flex-1 p-6 md:p-8 space-y-8 overflow-y-auto max-w-7xl w-full mx-auto">
-          
+
           <AnimatePresence mode="wait">
             {activeTab === 'overview' && (
-              <motion.div 
+              <motion.div
                 key="overview"
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -510,9 +514,9 @@ const AdminDashboard: React.FC = () => {
                             <p className="text-[10px] text-slate-400 mt-0.5 truncate max-w-[200px]">{booking.tours?.title || 'Unknown Tour'}</p>
                           </div>
                           <span className={`text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full 
-                            ${booking.status === 'confirmed' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20' : 
-                              booking.status === 'cancelled' ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/20' : 
-                              'bg-yellow-50 text-yellow-700 dark:bg-yellow-950/20'}`}>
+                            ${booking.status === 'confirmed' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20' :
+                              booking.status === 'cancelled' ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/20' :
+                                'bg-yellow-50 text-yellow-700 dark:bg-yellow-950/20'}`}>
                             {booking.status}
                           </span>
                         </div>
@@ -553,7 +557,7 @@ const AdminDashboard: React.FC = () => {
             )}
 
             {activeTab === 'users' && (
-              <motion.div 
+              <motion.div
                 key="users"
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -605,7 +609,7 @@ const AdminDashboard: React.FC = () => {
             )}
 
             {activeTab === 'bookings' && (
-              <motion.div 
+              <motion.div
                 key="bookings"
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -615,7 +619,7 @@ const AdminDashboard: React.FC = () => {
               >
                 <div className="p-6 border-b border-slate-100 dark:border-slate-800 space-y-4">
                   <h3 className="text-sm font-bold text-slate-850 dark:text-white uppercase tracking-wider">Booking Management</h3>
-                  
+
                   {/* Filters Row */}
                   <div className="flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-center pt-2">
                     {/* Search Field */}
@@ -687,7 +691,7 @@ const AdminDashboard: React.FC = () => {
             )}
 
             {activeTab === 'guides' && (
-              <motion.div 
+              <motion.div
                 key="guides"
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -699,7 +703,7 @@ const AdminDashboard: React.FC = () => {
             )}
 
             {activeTab === 'messages' && (
-              <motion.div 
+              <motion.div
                 key="messages"
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -741,7 +745,7 @@ const AdminDashboard: React.FC = () => {
             )}
 
             {activeTab === 'reviews' && (
-              <motion.div 
+              <motion.div
                 key="reviews"
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -788,7 +792,7 @@ const AdminDashboard: React.FC = () => {
             )}
 
             {activeTab === 'events' && (
-              <motion.div 
+              <motion.div
                 key="events"
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -800,7 +804,7 @@ const AdminDashboard: React.FC = () => {
             )}
 
             {activeTab === 'settings' && (
-              <motion.div 
+              <motion.div
                 key="settings"
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -838,7 +842,7 @@ const AdminDashboard: React.FC = () => {
 
     return (
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           className="bg-white dark:bg-slate-900 rounded-3xl max-w-2xl w-full max-h-[85vh] overflow-y-auto p-6 shadow-2xl relative border border-slate-200/20"
@@ -1043,13 +1047,13 @@ const GuidesTab: React.FC<{ guides: any[], bookings: any[], setGuides: any, toke
       if (res.ok) {
         toast.success(`Guide ${status} successfully`);
         if (guideDetails) {
-          setGuideDetails({ 
-            ...guideDetails, 
-            profile: { 
-              ...guideDetails.profile, 
+          setGuideDetails({
+            ...guideDetails,
+            profile: {
+              ...guideDetails.profile,
               is_verified: status === 'verified' ? 1 : 0,
               rejection_reason: status === 'rejected' ? (reason || null) : null
-            } 
+            }
           });
         }
         setShowRejectionForm(false);
@@ -1119,7 +1123,7 @@ const GuidesTab: React.FC<{ guides: any[], bookings: any[], setGuides: any, toke
 
     return (
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           className="bg-white dark:bg-slate-900 rounded-3xl max-w-4xl w-full max-h-[85vh] overflow-y-auto p-6 relative border border-slate-200/20"
@@ -1128,12 +1132,12 @@ const GuidesTab: React.FC<{ guides: any[], bookings: any[], setGuides: any, toke
             <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
               {viewMode === 'profile' ? 'Guide Profile File' : 'Government Verification Review'}
             </h2>
-            <button 
-              onClick={() => { 
-                setSelectedGuideId(null); 
-                setShowRejectionForm(false); 
-                setRejectionReason(''); 
-              }} 
+            <button
+              onClick={() => {
+                setSelectedGuideId(null);
+                setShowRejectionForm(false);
+                setRejectionReason('');
+              }}
               className="p-2 hover:bg-slate-100 rounded-full transition text-slate-400"
             >
               <X size={18} />
@@ -1241,14 +1245,14 @@ const GuidesTab: React.FC<{ guides: any[], bookings: any[], setGuides: any, toke
                         onChange={e => setRejectionReason(e.target.value)}
                       />
                       <div className="flex justify-end space-x-3 text-xs">
-                        <button 
-                          onClick={() => { setShowRejectionForm(false); setRejectionReason(''); }} 
+                        <button
+                          onClick={() => { setShowRejectionForm(false); setRejectionReason(''); }}
                           className="px-3 py-1.5 border border-slate-200 rounded-xl hover:bg-slate-100 text-slate-700 bg-white font-bold"
                         >
                           Cancel
                         </button>
-                        <button 
-                          onClick={() => handleVerifyGuide(profile.id, 'rejected', rejectionReason)} 
+                        <button
+                          onClick={() => handleVerifyGuide(profile.id, 'rejected', rejectionReason)}
                           disabled={!rejectionReason.trim()}
                           className="px-4 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl shadow-md font-bold disabled:opacity-50"
                         >
@@ -1288,11 +1292,11 @@ const GuidesTab: React.FC<{ guides: any[], bookings: any[], setGuides: any, toke
           <h3 className="text-sm font-bold text-slate-850 dark:text-white uppercase tracking-wider">Local Guides Registry</h3>
           <span className="inline-block text-[10px] text-indigo-600 dark:text-indigo-400 bg-indigo-50/50 dark:bg-indigo-950/20 px-2 py-0.5 rounded font-bold">Today: {today.toLocaleDateString()}</span>
         </div>
-        <button 
-          onClick={() => setShowAdd(!showAdd)} 
+        <button
+          onClick={() => setShowAdd(!showAdd)}
           className={`px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm active:scale-98
-            ${showAdd 
-              ? 'bg-slate-100 hover:bg-slate-200 text-slate-700' 
+            ${showAdd
+              ? 'bg-slate-100 hover:bg-slate-200 text-slate-700'
               : 'bg-indigo-650 hover:bg-indigo-700 text-white shadow-indigo-600/10'}`}
         >
           {showAdd ? 'Cancel Add' : 'Register New Guide'}
@@ -1503,7 +1507,7 @@ const SettingsTab: React.FC<{ profile: any, token: string | null }> = ({ profile
         </h3>
         <p className="text-xs text-slate-400">Modify email logins and secure passcode credentials.</p>
       </div>
-      
+
       <form onSubmit={handleUpdate} className="space-y-4 text-xs font-semibold">
         <div className="space-y-1">
           <label className="text-[10px] font-bold text-slate-400 uppercase">Admin Username Email</label>
@@ -1560,7 +1564,7 @@ const AddTourModal: React.FC<{ onClose: () => void, destinations: any[], guides:
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-slate-200/20"
