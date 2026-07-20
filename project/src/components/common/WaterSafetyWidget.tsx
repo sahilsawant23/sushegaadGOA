@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { goaBeaches } from '../../data/beachesData';
 import { 
   BEACH_SAFETY_DATASET, 
   BeachSafetyData, 
-  FlagStatus 
+  FlagStatus,
+  getBeachSafetyData,
+  fetchLiveMarineData
 } from '../../data/tideWaterSafetyData';
 import { 
   Waves, 
@@ -23,14 +26,22 @@ import {
 
 interface Props {
   compact?: boolean;
+  beachId?: string;
+  beachName?: string;
+  region?: string;
 }
 
-export const WaterSafetyWidget: React.FC<Props> = ({ compact = false }) => {
-  const [selectedBeachId, setSelectedBeachId] = useState<string>('baga-beach');
+export const WaterSafetyWidget: React.FC<Props> = ({ compact = false, beachId, beachName, region }) => {
+  const [selectedBeachId, setSelectedBeachId] = useState<string>(beachId || 'baga-beach');
   const [isOpenModal, setIsOpenModal] = useState<boolean>(false);
 
-  const activeBeach: BeachSafetyData = 
-    BEACH_SAFETY_DATASET.find(b => b.beachId === selectedBeachId) || BEACH_SAFETY_DATASET[0];
+  useEffect(() => {
+    if (beachId) {
+      setSelectedBeachId(beachId);
+    }
+  }, [beachId]);
+
+  const activeBeach: BeachSafetyData = getBeachSafetyData(selectedBeachId, beachName, region);
 
   const getFlagBadge = (status: FlagStatus) => {
     switch (status) {
@@ -138,6 +149,45 @@ const WaterSafetyContent: React.FC<InnerProps> = ({
   flagStyle,
   FlagIcon
 }) => {
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+  const [liveWave, setLiveWave] = useState<string | null>(null);
+  const [liveTemp, setLiveTemp] = useState<string | null>(null);
+  const [liveWind, setLiveWind] = useState<string | null>(null);
+  const [liveUv, setLiveUv] = useState<number | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadLiveApiData = async () => {
+      setLastUpdated(new Date());
+
+      // 1. Look up exact GPS coordinates from goaBeaches dataset
+      const foundMatch = goaBeaches.find(b => 
+        String(b.id).toLowerCase() === activeBeach.beachId.toLowerCase() ||
+        b.name.toLowerCase().includes(activeBeach.beachId.toLowerCase())
+      );
+
+      const lat = foundMatch?.coordinates?.lat || (activeBeach.region.toLowerCase().includes('south') ? 15.0074 : 15.5555);
+      const lng = foundMatch?.coordinates?.lng || (activeBeach.region.toLowerCase().includes('south') ? 74.0245 : 73.7511);
+
+      const liveData = await fetchLiveMarineData(lat, lng);
+      if (isMounted && liveData) {
+        if (liveData.waveHeight) setLiveWave(liveData.waveHeight);
+        if (liveData.waterTemp) setLiveTemp(liveData.waterTemp);
+        if (liveData.windSpeed) setLiveWind(liveData.windSpeed);
+        if (liveData.uvIndex !== undefined) setLiveUv(liveData.uvIndex);
+      }
+    };
+
+    loadLiveApiData();
+
+    const interval = setInterval(loadLiveApiData, 30000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [activeBeach.beachId, activeBeach.region]);
+
   return (
     <div className="space-y-5">
       {/* Header & Beach Selector */}
@@ -146,15 +196,25 @@ const WaterSafetyContent: React.FC<InnerProps> = ({
           <div className="flex items-center gap-2">
             <Waves className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
             <h3 className="font-extrabold text-lg tracking-tight">Goa Beach Water Safety & Tide Hub</h3>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> LIVE
+            </span>
           </div>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Real-time ocean conditions & beach safety updates</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+            Real-time ocean conditions • Updated {lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+          </p>
         </div>
 
         <select
-          value={selectedBeachId}
+          value={activeBeach.beachId}
           onChange={(e) => setSelectedBeachId(e.target.value)}
           className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-xl px-3 py-1.5 text-xs font-semibold focus:ring-2 focus:ring-cyan-500 focus:outline-none"
         >
+          {!BEACH_SAFETY_DATASET.some(b => b.beachId === activeBeach.beachId) && (
+            <option value={activeBeach.beachId}>
+              {activeBeach.beachName} ({activeBeach.region})
+            </option>
+          )}
           {BEACH_SAFETY_DATASET.map(b => (
             <option key={b.beachId} value={b.beachId}>
               {b.beachName} ({b.region})
@@ -198,28 +258,33 @@ const WaterSafetyContent: React.FC<InnerProps> = ({
           <div className="text-gray-400 flex items-center gap-1 mb-1">
             <Waves className="h-3.5 w-3.5 text-cyan-500" /> Wave Height
           </div>
-          <div className="text-sm font-bold">{activeBeach.waveHeight}</div>
+          <div className="text-sm font-bold flex items-center gap-1">
+            {liveWave || activeBeach.waveHeight}
+            {liveWave && <span className="text-[10px] text-emerald-500 font-bold">API Live</span>}
+          </div>
         </div>
 
         <div className="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-2xl border border-gray-100 dark:border-gray-700">
           <div className="text-gray-400 flex items-center gap-1 mb-1">
             <Thermometer className="h-3.5 w-3.5 text-rose-500" /> Sea Temp
           </div>
-          <div className="text-sm font-bold">{activeBeach.waterTemp}</div>
+          <div className="text-sm font-bold">{liveTemp || activeBeach.waterTemp}</div>
         </div>
 
         <div className="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-2xl border border-gray-100 dark:border-gray-700">
           <div className="text-gray-400 flex items-center gap-1 mb-1">
             <Wind className="h-3.5 w-3.5 text-blue-500" /> Wind Speed
           </div>
-          <div className="text-sm font-bold">{activeBeach.windSpeed}</div>
+          <div className="text-sm font-bold">{liveWind || activeBeach.windSpeed}</div>
         </div>
 
         <div className="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-2xl border border-gray-100 dark:border-gray-700">
           <div className="text-gray-400 flex items-center gap-1 mb-1">
             <Sun className="h-3.5 w-3.5 text-amber-500" /> UV Index
           </div>
-          <div className="text-sm font-bold">{activeBeach.uvIndex} (High)</div>
+          <div className="text-sm font-bold">
+            {liveUv !== null ? `${liveUv} (${liveUv >= 8 ? 'Very High' : liveUv >= 6 ? 'High' : 'Moderate'})` : `${activeBeach.uvIndex} (High)`}
+          </div>
         </div>
       </div>
 

@@ -8,6 +8,7 @@ import { goaChurches } from '../data/churchData';
 import { goaTemples } from '../data/templeData';
 import { goaBeaches } from '../data/beachesData';
 import { goaWaterfalls } from '../data/waterfallData';
+import WaterSafetyWidget from '../components/common/WaterSafetyWidget';
 
 const PlaceDetails: React.FC = () => {
     const { id } = useParams<{ id: string; category?: string }>();
@@ -297,6 +298,13 @@ const PlaceDetails: React.FC = () => {
                                     <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
                                         {details.safetyTips}
                                     </p>
+                                </div>
+                            )}
+
+                            {/* Live Water Safety & Tide Predictor for Beach destinations */}
+                            {(place.category === 'Beach' || place.name?.toLowerCase().includes('beach')) && (
+                                <div className="mt-8">
+                                    <WaterSafetyWidget beachId={place.id} beachName={place.name} region={place.region} />
                                 </div>
                             )}
                         </div>
