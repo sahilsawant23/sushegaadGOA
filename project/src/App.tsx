@@ -52,6 +52,7 @@ import PlaceDetails from './pages/PlaceDetails';
 import RegionDetails from './pages/RegionDetails';
 import AITripPlanner from './pages/AITripPlanner';
 import Rentals from './pages/Rentals';
+import GroupPlanner from './pages/GroupPlanner';
 
 const AppContent = () => {
   const location = useLocation();
@@ -84,6 +85,7 @@ const AppContent = () => {
           <Route path="/places" element={<RealtimeExplorer />} />
           <Route path="/ai-planner" element={<AITripPlanner />} />
           <Route path="/rentals" element={<Rentals />} />
+          <Route path="/group-planner" element={<GroupPlanner />} />
 
           <Route path="/events" element={<Events />} />
           <Route path="/events/:id" element={<EventDetails />} />
@@ -113,6 +115,7 @@ const AppContent = () => {
           <Route path="/compare" element={<ComparisonPage />} />
         </Routes>
       </main>
+
       {!hideLayout && <Footer />}
       {!hideLayout && <ChatbotWidget />}
       {!hideLayout && <CompareTray />}
