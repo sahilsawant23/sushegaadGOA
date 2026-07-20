@@ -36,6 +36,32 @@ const Destinations: React.FC = () => {
     }
   }, [region]);
 
+  const [realtimeBeaches, setRealtimeBeaches] = useState<any[]>(goaBeaches);
+
+  useEffect(() => {
+    let isMounted = true;
+    fetch('http://localhost:5000/api/realtime/places')
+      .then(res => res.ok ? res.json() : [])
+      .then((data: any[]) => {
+        if (isMounted && Array.isArray(data) && data.length > 0) {
+          const apiBeaches = data.filter((item: any) => 
+            item.type === 'Beach' || item.type === 'Beach Shack' || item.name.toLowerCase().includes('beach')
+          );
+          if (apiBeaches.length > 0) {
+            setRealtimeBeaches(prev => {
+              // Merge API beaches into list without duplicating IDs
+              const existingIds = new Set(prev.map(p => String(p.id)));
+              const newItems = apiBeaches.filter(b => !existingIds.has(String(b.id)));
+              return [...prev, ...newItems];
+            });
+          }
+        }
+      })
+      .catch(() => {});
+
+    return () => { isMounted = false; };
+  }, []);
+
   const toggleWishlist = (e: React.MouseEvent, beach: any) => {
     e.preventDefault();
     e.stopPropagation();
@@ -46,13 +72,13 @@ const Destinations: React.FC = () => {
     }
   };
 
-  const filteredBeaches = goaBeaches.filter(beach => {
+  const filteredBeaches = realtimeBeaches.filter(beach => {
 
     const matchesRegion = selectedRegion === 'all' || beach.region === selectedRegion;
-    const matchesCrowd = selectedCrowdLevel === 'all' || beach.crowdLevel === selectedCrowdLevel;
-    const matchesSearch = beach.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      beach.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      beach.highlights.some(h => h.toLowerCase().includes(searchQuery.toLowerCase()));
+    const matchesCrowd = selectedCrowdLevel === 'all' || (beach.crowdLevel && beach.crowdLevel === selectedCrowdLevel);
+    const matchesSearch = (beach.name && beach.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (beach.description && beach.description.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (beach.highlights && beach.highlights.some((h: string) => h.toLowerCase().includes(searchQuery.toLowerCase())));
 
     return matchesRegion && matchesCrowd && matchesSearch;
   });
@@ -308,20 +334,20 @@ const Destinations: React.FC = () => {
                         <div className="text-sm text-gray-600 dark:text-gray-300">
                           Best for: {beach.bestFor.slice(0, 2).join(', ')}
                         </div>
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-2 gap-3 mt-3">
                           <Link
                             to={`/destination/beach/${beach.id}`}
-                            className="flex items-center justify-center px-4 py-2 border border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold"
+                            className="btn-primary !px-4 !py-2.5 !text-sm font-bold shadow-md hover:shadow-lg transition-all"
                           >
-                            Explore
+                            Explore ➔
                           </Link>
                           <a
                             href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(beach.name + " beach Goa")}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-semibold"
+                            className="btn-secondary !px-4 !py-2.5 !text-sm font-semibold border-2 hover:border-amber-500 transition-all"
                           >
-                            Directions
+                            📍 Map
                           </a>
                         </div>
                       </div>

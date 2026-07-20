@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { MapPin, ArrowLeft, Check } from 'lucide-react';
@@ -22,7 +22,7 @@ const BeachDetails: React.FC = () => {
 
     const formattedTitle = rawId.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 
-    const beach = foundBeach || {
+    const defaultBeach = foundBeach || {
       id: rawId || 'baga',
       name: formattedTitle.toLowerCase().includes('beach') ? formattedTitle : `${formattedTitle} Beach`,
       region: 'North Goa',
@@ -43,6 +43,36 @@ const BeachDetails: React.FC = () => {
       bestTimeToVisit: ['October', 'November', 'December', 'January', 'February', 'March'],
       accessibility: 'Easy'
     };
+
+    const [beach, setBeach] = useState<any>(defaultBeach);
+
+    useEffect(() => {
+      let isMounted = true;
+      
+      // Instantly sync beach state to current route target
+      setBeach(foundBeach || defaultBeach);
+
+      if (id) {
+        // Fetch real-time place data from backend
+        fetch(`http://localhost:5000/api/realtime/places/${id}`)
+          .then(res => res.ok ? res.json() : null)
+          .then(data => {
+            if (isMounted && data) {
+              setBeach((prev: any) => ({
+                ...prev,
+                name: data.name || prev.name,
+                region: data.region || prev.region,
+                description: data.description || prev.description,
+                image: data.image || prev.image,
+                images: data.image ? [data.image, ...(prev.images || [])] : prev.images,
+                crowdLevel: data.type === 'Beach Shack' ? 'Crowded' : prev.crowdLevel
+              }));
+            }
+          })
+          .catch(() => {});
+      }
+      return () => { isMounted = false; };
+    }, [id, searchKey]);
 
     const sliderImages = (beach.images && beach.images.length > 0)
       ? beach.images 
