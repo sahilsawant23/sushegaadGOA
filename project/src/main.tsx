@@ -10,3 +10,5 @@ createRoot(document.getElementById('root')!).render(
 );
 //cd "F:\e drive data\sahil\GOA website\project\backend"
 //npm run dev
+
+//.g., Live Water Safety & Tide Widget, Scooter Rental Engine, or Collaborative Group Planner

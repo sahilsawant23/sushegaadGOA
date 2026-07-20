@@ -51,6 +51,7 @@ import HiddenGemDetails from './pages/HiddenGemDetails';
 import PlaceDetails from './pages/PlaceDetails';
 import RegionDetails from './pages/RegionDetails';
 import AITripPlanner from './pages/AITripPlanner';
+import Rentals from './pages/Rentals';
 
 const AppContent = () => {
   const location = useLocation();
@@ -82,6 +83,7 @@ const AppContent = () => {
           <Route path="/nightlife/:id" element={<PlaceDetails />} />
           <Route path="/places" element={<RealtimeExplorer />} />
           <Route path="/ai-planner" element={<AITripPlanner />} />
+          <Route path="/rentals" element={<Rentals />} />
 
           <Route path="/events" element={<Events />} />
           <Route path="/events/:id" element={<EventDetails />} />

@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X, User, Heart, MapPin, } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import WeatherWidget from './WeatherWidget';
+import WaterSafetyWidget from './WaterSafetyWidget';
 import ThemeToggle from './ThemeToggle';
 
 const Navbar: React.FC = () => {
