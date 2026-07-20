@@ -3061,4 +3061,407 @@ router.get('/realtime/places/:id', async (req, res) => {
   }
 });
 
+// --- REALTIME GROUP TRIP PLANNER BACKEND API ---
+
+// In-Memory Realtime Group Store with auto-initialization
+const realtimeGroupTrips = {
+  'GOA-GANG-9842': {
+    code: 'GOA-GANG-9842',
+    name: 'Goa Summer Beach & Sunset Reunion 🌴',
+    created_at: new Date().toISOString(),
+    members: [
+      { id: 'm1', name: 'Sahil (Leader)', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150', role: 'leader' },
+      { id: 'm2', name: 'Rahul M.', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150', role: 'member' },
+      { id: 'm3', name: 'Sarah K.', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150', role: 'member' },
+      { id: 'm4', name: 'Vikram S.', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150', role: 'member' }
+    ],
+    polls: [
+      {
+        id: 'p1',
+        title: 'Scuba Diving & Water Sports at Grand Island',
+        category: 'Adventure',
+        costPerHead: 2499,
+        location: 'Grand Island, North Goa',
+        upvotes: ['m1', 'm2', 'm3'],
+        downvotes: [],
+        proposedBy: 'Sahil (Leader)',
+        confirmed: true,
+        day: 1
+      },
+      {
+        id: 'p2',
+        title: 'Sunset Beach Shack Seafood Feast & Cocktails',
+        category: 'Food & Drinks',
+        costPerHead: 1200,
+        location: 'Curlies / Baga Beach, North Goa',
+        upvotes: ['m1', 'm2', 'm3', 'm4'],
+        downvotes: [],
+        proposedBy: 'Sarah K.',
+        confirmed: true,
+        day: 1
+      },
+      {
+        id: 'p3',
+        title: 'Self-Drive Thar Cruise to Dudhsagar Waterfalls',
+        category: 'Sightseeing',
+        costPerHead: 1500,
+        location: 'Mollem National Park',
+        upvotes: ['m1', 'm4'],
+        downvotes: ['m3'],
+        proposedBy: 'Vikram S.',
+        confirmed: false,
+        day: 2
+      },
+      {
+        id: 'p4',
+        title: 'Silent Noise Headphone Party at Palolem',
+        category: 'Nightlife',
+        costPerHead: 1800,
+        location: 'Palolem Beach, South Goa',
+        upvotes: ['m2', 'm3'],
+        downvotes: [],
+        proposedBy: 'Rahul M.',
+        confirmed: false,
+        day: 2
+      }
+    ],
+    expenses: [
+      { id: 'e1', description: 'Yamaha Fascino & Activa Scooter Rentals (3 Days)', amount: 4500, paidBy: 'Sahil (Leader)', date: '2026-07-20' },
+      { id: 'e2', description: 'Baga Shack Dinner & Drinks', amount: 3800, paidBy: 'Sarah K.', date: '2026-07-20' },
+      { id: 'e3', description: 'Fuel Refill & Toll Charges', amount: 1200, paidBy: 'Rahul M.', date: '2026-07-21' }
+    ],
+    checklist: [
+      { id: 'c1', text: 'Valid Driving License (For Commercial Scooter Rentals)', completed: true, assignedTo: 'Sahil (Leader)' },
+      { id: 'c2', text: 'Sunscreen (SPF 50+), Sunglasses & Beach Towels', completed: true, assignedTo: 'Sarah K.' },
+      { id: 'c3', text: 'Cash in INR for local beach shacks & parking fees', completed: false, assignedTo: 'Rahul M.' },
+      { id: 'c4', text: 'Waterproof Phone Pouches for Water Sports', completed: false, assignedTo: 'Vikram S.' }
+    ]
+  }
+};
+
+// GET Group Details by Code
+router.get('/group/:code', (req, res) => {
+  const code = (req.params.code || 'GOA-GANG-9842').toUpperCase();
+  if (!realtimeGroupTrips[code]) {
+    // Auto-create new group trip if code is new
+    realtimeGroupTrips[code] = {
+      code,
+      name: `Goa Trip Squad (${code})`,
+      created_at: new Date().toISOString(),
+      members: [
+        { id: 'm1', name: 'Sahil (You)', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150', role: 'leader' }
+      ],
+      polls: [],
+      expenses: [],
+      checklist: []
+    };
+  }
+  res.json(realtimeGroupTrips[code]);
+});
+
+// CREATE a New Group Trip
+router.post('/group/create', (req, res) => {
+  const { name, leaderName } = req.body;
+  const code = 'GOA-GROUP-' + Math.floor(1000 + Math.random() * 9000);
+  realtimeGroupTrips[code] = {
+    code,
+    name: name || 'Goa Group Adventure 🌴',
+    created_at: new Date().toISOString(),
+    members: [
+      { id: 'm1', name: leaderName || 'Trip Organizer', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150', role: 'leader' }
+    ],
+    polls: [],
+    expenses: [],
+    checklist: []
+  };
+  res.json({ success: true, code, trip: realtimeGroupTrips[code] });
+});
+
+// JOIN a Group Trip
+router.post('/group/:code/join', (req, res) => {
+  const code = req.params.code.toUpperCase();
+  const { name } = req.body;
+  const trip = realtimeGroupTrips[code];
+  if (!trip) return res.status(404).json({ message: 'Trip code not found' });
+
+  const existing = trip.members.find(m => m.name.toLowerCase() === (name || '').toLowerCase());
+  if (!existing) {
+    const newMember = {
+      id: 'm-' + Date.now(),
+      name: name || 'Squad Member',
+      avatar: `https://images.unsplash.com/photo-${1500000000000 + (trip.members.length * 100000)}?w=150`,
+      role: 'member'
+    };
+    trip.members.push(newMember);
+  }
+  res.json({ success: true, trip });
+});
+
+// PROPOSE a New Activity
+router.post('/group/:code/propose', (req, res) => {
+  const code = req.params.code.toUpperCase();
+  const { title, category, costPerHead, location, day, proposedBy } = req.body;
+  const trip = realtimeGroupTrips[code];
+  if (!trip) return res.status(404).json({ message: 'Trip code not found' });
+
+  const newPoll = {
+    id: 'p-' + Date.now(),
+    title: title || 'New Proposed Activity',
+    category: category || 'Beach & Chill',
+    costPerHead: Number(costPerHead) || 0,
+    location: location || 'Goa Coast',
+    upvotes: ['m1'],
+    downvotes: [],
+    proposedBy: proposedBy || 'Squad Member',
+    confirmed: false,
+    day: Number(day) || 1
+  };
+  trip.polls.unshift(newPoll);
+  res.json({ success: true, poll: newPoll, trip });
+});
+
+// VOTE on an Activity
+router.post('/group/:code/vote', (req, res) => {
+  const code = req.params.code.toUpperCase();
+  const { pollId, userId, voteType } = req.body;
+  const trip = realtimeGroupTrips[code];
+  if (!trip) return res.status(404).json({ message: 'Trip code not found' });
+
+  const poll = trip.polls.find(p => p.id === pollId);
+  if (!poll) return res.status(404).json({ message: 'Poll not found' });
+
+  const voterId = userId || 'm1';
+  let upvotes = [...poll.upvotes];
+  let downvotes = [...poll.downvotes];
+
+  if (voteType === 'up') {
+    if (upvotes.includes(voterId)) {
+      upvotes = upvotes.filter(id => id !== voterId);
+    } else {
+      upvotes.push(voterId);
+      downvotes = downvotes.filter(id => id !== voterId);
+    }
+  } else {
+    if (downvotes.includes(voterId)) {
+      downvotes = downvotes.filter(id => id !== voterId);
+    } else {
+      downvotes.push(voterId);
+      upvotes = upvotes.filter(id => id !== voterId);
+    }
+  }
+
+  poll.upvotes = upvotes;
+  poll.downvotes = downvotes;
+  res.json({ success: true, poll, trip });
+});
+
+// CONFIRM Activity to Itinerary
+router.post('/group/:code/confirm-activity', (req, res) => {
+  const code = req.params.code.toUpperCase();
+  const { pollId } = req.body;
+  const trip = realtimeGroupTrips[code];
+  if (!trip) return res.status(404).json({ message: 'Trip code not found' });
+
+  const poll = trip.polls.find(p => p.id === pollId);
+  if (poll) poll.confirmed = !poll.confirmed;
+  res.json({ success: true, trip });
+});
+
+// ADD Expense
+router.post('/group/:code/expense', (req, res) => {
+  const code = req.params.code.toUpperCase();
+  const { description, amount, paidBy } = req.body;
+  const trip = realtimeGroupTrips[code];
+  if (!trip) return res.status(404).json({ message: 'Trip code not found' });
+
+  const newExp = {
+    id: 'e-' + Date.now(),
+    description: description || 'Group Expense',
+    amount: Number(amount) || 0,
+    paidBy: paidBy || 'Squad Member',
+    date: new Date().toISOString().split('T')[0]
+  };
+  trip.expenses.unshift(newExp);
+  res.json({ success: true, expense: newExp, trip });
+});
+
+// CHECKLIST Item Toggle & Add
+router.post('/group/:code/checklist', (req, res) => {
+  const code = req.params.code.toUpperCase();
+  const { action, text, itemId, assignedTo } = req.body;
+  const trip = realtimeGroupTrips[code];
+  if (!trip) return res.status(404).json({ message: 'Trip code not found' });
+
+  if (action === 'toggle') {
+    const item = trip.checklist.find(c => c.id === itemId);
+    if (item) item.completed = !item.completed;
+  } else if (action === 'add') {
+    trip.checklist.push({
+      id: 'c-' + Date.now(),
+      text: text || 'New Packing Item',
+      completed: false,
+      assignedTo: assignedTo || 'Squad Member'
+    });
+  }
+  res.json({ success: true, trip });
+});
+
+// --- COMMERCIAL SCOOTER & CAR RENTAL BOOKINGS API ---
+
+const rentalBookingsStore = [
+  {
+    id: '1',
+    booking_id: 'GOA-RENT-849201',
+    customer_name: 'Rahul Sharma',
+    customer_email: 'rahul.sharma@example.com',
+    customer_phone: '+91 9823456789',
+    driving_license: 'DL-042021009842',
+    vehicle_name: 'Yamaha Fascino 125cc (Yellow Plate)',
+    category: 'scooter',
+    daily_price: 450,
+    rental_days: 3,
+    pickup_hub: 'Panaji Bus Stand Hub',
+    pickup_date: '2026-07-22 at 09:00 AM',
+    dropoff_date: '2026-07-25 at 09:00 AM',
+    total_amount: 1418,
+    deposit: 1000,
+    payment_id: 'pay_RZP_FASCINO_984',
+    payment_status: 'PAID',
+    status: 'Confirmed',
+    created_at: new Date().toISOString()
+  },
+  {
+    id: '2',
+    booking_id: 'GOA-RENT-912048',
+    customer_name: 'Sarah Khan',
+    customer_email: 'sarah.k@example.com',
+    customer_phone: '+91 9811223344',
+    driving_license: 'DL-072019004112',
+    vehicle_name: 'Maruti Suzuki Baleno (Self-Drive)',
+    category: 'car',
+    daily_price: 1800,
+    rental_days: 2,
+    pickup_hub: 'Mopa International Airport Hub',
+    pickup_date: '2026-07-23 at 10:00 AM',
+    dropoff_date: '2026-07-25 at 10:00 AM',
+    total_amount: 3780,
+    deposit: 3000,
+    payment_id: 'pay_RZP_BALENO_391',
+    payment_status: 'PAID',
+    status: 'Vehicle Handed Over',
+    created_at: new Date().toISOString()
+  }
+];
+
+// Create New Rental Booking
+router.post('/rentals/book', async (req, res) => {
+  const {
+    bookingId,
+    customerName,
+    customerEmail,
+    customerPhone,
+    drivingLicense,
+    vehicleName,
+    category,
+    dailyPrice,
+    rentalDays,
+    pickupHub,
+    pickupDate,
+    dropoffDate,
+    totalAmount,
+    deposit,
+    paymentId,
+    paymentStatus
+  } = req.body;
+
+  const newRentalBooking = {
+    id: 'rb-' + Date.now(),
+    booking_id: bookingId || 'GOA-RENT-' + Math.floor(100000 + Math.random() * 900000),
+    customer_name: customerName || 'Goa Tourist',
+    customer_email: customerEmail || 'tourist@example.com',
+    customer_phone: customerPhone || '+91 9800000000',
+    driving_license: drivingLicense || 'DL-PENDING',
+    vehicle_name: vehicleName || 'Yamaha Fascino 125cc',
+    category: category || 'scooter',
+    daily_price: Number(dailyPrice) || 450,
+    rental_days: Number(rentalDays) || 1,
+    pickup_hub: pickupHub || 'Panaji Hub',
+    pickup_date: pickupDate || '2026-07-22',
+    dropoff_date: dropoffDate || '2026-07-23',
+    total_amount: Number(totalAmount) || 500,
+    deposit: Number(deposit) || 1000,
+    payment_id: paymentId || 'pay_RZP_' + Date.now(),
+    payment_status: paymentStatus || 'PAID',
+    status: 'Confirmed',
+    created_at: new Date().toISOString()
+  };
+
+  rentalBookingsStore.unshift(newRentalBooking);
+
+  // Try DB insert if table exists
+  try {
+    const conn = await pool.getConnection();
+    await conn.execute(
+      `INSERT INTO rental_bookings 
+       (booking_id, customer_name, customer_email, customer_phone, driving_license, vehicle_name, category, daily_price, rental_days, pickup_hub, pickup_date, dropoff_date, total_amount, deposit, payment_id, payment_status, status, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Confirmed', NOW())`,
+      [
+        newRentalBooking.booking_id,
+        newRentalBooking.customer_name,
+        newRentalBooking.customer_email,
+        newRentalBooking.customer_phone,
+        newRentalBooking.driving_license,
+        newRentalBooking.vehicle_name,
+        newRentalBooking.category,
+        newRentalBooking.daily_price,
+        newRentalBooking.rental_days,
+        newRentalBooking.pickup_hub,
+        newRentalBooking.pickup_date,
+        newRentalBooking.dropoff_date,
+        newRentalBooking.total_amount,
+        newRentalBooking.deposit,
+        newRentalBooking.payment_id,
+        newRentalBooking.payment_status
+      ]
+    );
+    conn.release();
+  } catch (err) {
+    // Ignore DB error and fallback to memory store
+  }
+
+  res.status(201).json({ success: true, booking: newRentalBooking });
+});
+
+// Admin: GET All Rental Bookings
+router.get('/admin/rental-bookings', async (req, res) => {
+  try {
+    const conn = await pool.getConnection();
+    const [rows] = await conn.execute('SELECT * FROM rental_bookings ORDER BY created_at DESC');
+    conn.release();
+    if (rows && rows.length > 0) return res.json(rows);
+  } catch (err) {
+    // DB fallback
+  }
+  res.json(rentalBookingsStore);
+});
+
+// Admin: Update Rental Booking Status
+router.put('/admin/rental-bookings/:id/status', async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+
+  const booking = rentalBookingsStore.find(b => b.id === id || b.booking_id === id);
+  if (booking) booking.status = status || booking.status;
+
+  try {
+    const conn = await pool.getConnection();
+    await conn.execute('UPDATE rental_bookings SET status = ? WHERE id = ? OR booking_id = ?', [status, id, id]);
+    conn.release();
+  } catch (err) {}
+
+  res.json({ success: true, status });
+});
+
 module.exports = router;
+
+

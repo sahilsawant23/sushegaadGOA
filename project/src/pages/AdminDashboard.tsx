@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Users, Calendar, DollarSign, TrendingUp, Eye, Trash2, LogOut, Search, FileDown,
   Plus, X, Shield, Menu, Power, Sparkles, Star, MessageSquare, Clock, MapPin,
-  Settings, Award, HelpCircle, Phone, FileText, CheckCircle, AlertCircle, ArrowUpRight
+  Settings, Award, HelpCircle, Phone, FileText, CheckCircle, AlertCircle, ArrowUpRight, Bike
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -19,6 +19,28 @@ interface User {
   customer_data?: {
     total_bookings?: number;
   };
+}
+
+interface RentalBooking {
+  id: string;
+  booking_id: string;
+  customer_name: string;
+  customer_email: string;
+  customer_phone: string;
+  driving_license: string;
+  vehicle_name: string;
+  category: string;
+  daily_price: number;
+  rental_days: number;
+  pickup_hub: string;
+  pickup_date: string;
+  dropoff_date: string;
+  total_amount: number;
+  deposit: number;
+  payment_id: string;
+  payment_status: string;
+  status: string;
+  created_at: string;
 }
 
 interface Booking {
@@ -100,6 +122,8 @@ const AdminDashboard: React.FC = () => {
 
   const [users, setUsers] = useState<User[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [rentalBookings, setRentalBookings] = useState<RentalBooking[]>([]);
+  const [rentalSearch, setRentalSearch] = useState('');
   const [filteredBookings, setFilteredBookings] = useState<Booking[]>([]);
   const [guides, setGuides] = useState<any[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -107,7 +131,7 @@ const AdminDashboard: React.FC = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [destinations, setDestinations] = useState<any[]>([]);
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'bookings' | 'guides' | 'messages' | 'reviews' | 'events' | 'settings'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'bookings' | 'rentals' | 'guides' | 'messages' | 'reviews' | 'events' | 'settings'>('overview');
   const [menuOpen, setMenuOpen] = useState(false);
 
   const [showAddTour, setShowAddTour] = useState(false);
@@ -195,6 +219,9 @@ const AdminDashboard: React.FC = () => {
       const guidesRes = await fetch(`${API_BASE_URL}/admin/guides`, { headers });
       if (guidesRes.ok) setGuides(await guidesRes.json());
 
+      const rentalsRes = await fetch(`${API_BASE_URL}/admin/rental-bookings`);
+      if (rentalsRes.ok) setRentalBookings(await rentalsRes.json());
+
       const msgsRes = await fetch(`${API_BASE_URL}/admin/messages`, { headers });
       if (msgsRes.ok) setMessages(await msgsRes.json());
 
@@ -209,6 +236,22 @@ const AdminDashboard: React.FC = () => {
 
     } catch (error) {
       console.error('Error loading data:', error);
+    }
+  };
+
+  const handleUpdateRentalStatus = async (bookingId: string, status: string) => {
+    try {
+      await fetch(`${API_BASE_URL}/admin/rental-bookings/${bookingId}/status`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status })
+      });
+      toast.success(`Booking ${bookingId} status updated to: ${status}`);
+      setRentalBookings(prev =>
+        prev.map(b => (b.booking_id === bookingId || b.id === bookingId ? { ...b, status } : b))
+      );
+    } catch (err) {
+      toast.error('Failed to update status');
     }
   };
 
@@ -292,6 +335,7 @@ const AdminDashboard: React.FC = () => {
     { id: 'overview' as const, icon: Clock, label: 'Overview' },
     { id: 'users' as const, icon: Users, label: 'User Directory' },
     { id: 'bookings' as const, icon: Calendar, label: 'Bookings & Orders' },
+    { id: 'rentals' as const, icon: Bike, label: 'Scooter & Car Rentals 🛵' },
     { id: 'guides' as const, icon: Award, label: 'Guides & Verification' },
     { id: 'messages' as const, icon: MessageSquare, label: 'Inbound Messages' },
     { id: 'reviews' as const, icon: Star, label: 'User Reviews' },
@@ -686,6 +730,186 @@ const AdminDashboard: React.FC = () => {
                     </tbody>
                   </table>
                   {filteredBookings.length === 0 && <div className="p-8 text-center text-slate-400 font-semibold">No bookings matched filters.</div>}
+                </div>
+              </motion.div>
+            )}
+
+            {activeTab === 'rentals' && (
+              <motion.div
+                key="rentals"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.3 }}
+                className="space-y-6"
+              >
+                {/* Rental Metrics Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800 shadow-sm flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Total Rentals</p>
+                      <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">{rentalBookings.length}</p>
+                    </div>
+                    <div className="p-3.5 rounded-2xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400">
+                      <Bike className="h-6 w-6" />
+                    </div>
+                  </div>
+
+                  <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800 shadow-sm flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Rental Revenue</p>
+                      <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">
+                        ₹{rentalBookings.reduce((sum, r) => sum + (Number(r.total_amount) || 0), 0).toLocaleString()}
+                      </p>
+                    </div>
+                    <div className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400">
+                      <DollarSign className="h-6 w-6" />
+                    </div>
+                  </div>
+
+                  <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800 shadow-sm flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Security Deposit Held</p>
+                      <p className="text-2xl font-black text-amber-600 dark:text-amber-400 mt-1">
+                        ₹{rentalBookings.reduce((sum, r) => sum + (Number(r.deposit) || 0), 0).toLocaleString()}
+                      </p>
+                    </div>
+                    <div className="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400">
+                      <Shield className="h-6 w-6" />
+                    </div>
+                  </div>
+
+                  <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800 shadow-sm flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Active Bookings</p>
+                      <p className="text-2xl font-black text-indigo-600 dark:text-indigo-400 mt-1">
+                        {rentalBookings.filter(r => r.status !== 'Completed' && r.status !== 'Cancelled').length}
+                      </p>
+                    </div>
+                    <div className="p-3.5 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400">
+                      <TrendingUp className="h-6 w-6" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Main Table Container */}
+                <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/50 dark:border-slate-800 shadow-sm overflow-hidden">
+                  <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div>
+                      <h3 className="text-sm font-bold text-slate-850 dark:text-white uppercase tracking-wider">
+                        Commercial Scooter & Vehicle Rental Orders
+                      </h3>
+                      <p className="text-xs text-slate-400 mt-0.5">Real-time payment records, customer details & vehicle status</p>
+                    </div>
+
+                    <div className="relative w-full sm:w-80">
+                      <Search className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-slate-400" size={16} />
+                      <input
+                        type="text"
+                        placeholder="Search by customer, vehicle, license, phone..."
+                        className="pl-10 pr-4 py-2 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none w-full text-xs font-semibold rounded-xl"
+                        value={rentalSearch}
+                        onChange={(e) => setRentalSearch(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-slate-100 dark:divide-slate-800 text-left">
+                      <thead className="bg-slate-50 dark:bg-slate-950 text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+                        <tr>
+                          <th className="px-6 py-4">Booking Ref</th>
+                          <th className="px-6 py-4">Customer & License</th>
+                          <th className="px-6 py-4">Vehicle & Hub</th>
+                          <th className="px-6 py-4">Rental Duration</th>
+                          <th className="px-6 py-4">Payment & Txn ID</th>
+                          <th className="px-6 py-4">Status & Dispatch</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-xs font-semibold">
+                        {rentalBookings
+                          .filter(r => {
+                            if (!rentalSearch) return true;
+                            const q = rentalSearch.toLowerCase();
+                            return (
+                              r.customer_name?.toLowerCase().includes(q) ||
+                              r.customer_phone?.toLowerCase().includes(q) ||
+                              r.vehicle_name?.toLowerCase().includes(q) ||
+                              r.driving_license?.toLowerCase().includes(q) ||
+                              r.booking_id?.toLowerCase().includes(q)
+                            );
+                          })
+                          .map((r) => (
+                            <tr key={r.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
+                              
+                              {/* Booking Ref */}
+                              <td className="px-6 py-4 font-mono font-bold text-slate-900 dark:text-white">
+                                <span className="px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-200/50">
+                                  {r.booking_id}
+                                </span>
+                              </td>
+
+                              {/* Customer & License */}
+                              <td className="px-6 py-4">
+                                <div className="font-extrabold text-slate-900 dark:text-white">{r.customer_name}</div>
+                                <div className="text-[11px] text-slate-400">{r.customer_phone}</div>
+                                <div className="text-[10px] text-indigo-600 dark:text-indigo-400 font-mono mt-0.5">
+                                  DL: {r.driving_license}
+                                </div>
+                              </td>
+
+                              {/* Vehicle & Hub */}
+                              <td className="px-6 py-4">
+                                <div className="font-extrabold text-slate-800 dark:text-slate-200">{r.vehicle_name}</div>
+                                <div className="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5">
+                                  <MapPin className="h-3 w-3 text-rose-500" /> {r.pickup_hub}
+                                </div>
+                              </td>
+
+                              {/* Rental Duration */}
+                              <td className="px-6 py-4">
+                                <div className="font-bold text-slate-900 dark:text-white">{r.rental_days} Days</div>
+                                <div className="text-[10px] text-slate-400 mt-0.5">
+                                  Pickup: {r.pickup_date}
+                                </div>
+                              </td>
+
+                              {/* Payment & Txn ID */}
+                              <td className="px-6 py-4">
+                                <div className="font-black text-emerald-600 dark:text-emerald-400 text-sm">
+                                  ₹{r.total_amount?.toLocaleString()}
+                                </div>
+                                <div className="text-[10px] text-slate-400">Deposit: ₹{r.deposit}</div>
+                                <div className="text-[10px] text-slate-500 font-mono mt-0.5">
+                                  {r.payment_id}
+                                </div>
+                              </td>
+
+                              {/* Status & Dispatch */}
+                              <td className="px-6 py-4">
+                                <select
+                                  value={r.status || 'Confirmed'}
+                                  onChange={(e) => handleUpdateRentalStatus(r.booking_id || r.id, e.target.value)}
+                                  className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                >
+                                  <option value="Confirmed">🟢 Confirmed</option>
+                                  <option value="Vehicle Handed Over">🔑 Vehicle Handed Over</option>
+                                  <option value="Completed">🏁 Completed & Returned</option>
+                                  <option value="Cancelled">🔴 Cancelled</option>
+                                </select>
+                              </td>
+
+                            </tr>
+                          ))}
+                      </tbody>
+                    </table>
+
+                    {rentalBookings.length === 0 && (
+                      <div className="p-12 text-center text-slate-400 font-semibold">
+                        No scooter or car rental bookings found.
+                      </div>
+                    )}
+                  </div>
                 </div>
               </motion.div>
             )}

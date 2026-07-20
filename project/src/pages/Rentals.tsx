@@ -136,8 +136,27 @@ export const Rentals: React.FC = () => {
       return;
     }
 
-    const processConfirmation = (paymentId?: string) => {
+    const processConfirmation = async (paymentId?: string) => {
       const bookingId = 'GOA-RENT-' + Math.floor(100000 + Math.random() * 900000);
+      const bookingData = {
+        bookingId,
+        customerName: customerDetails.fullName,
+        customerEmail: customerDetails.email || 'customer@example.com',
+        customerPhone: customerDetails.phone,
+        drivingLicense: customerDetails.drivingLicense,
+        vehicleName: activeVehicle?.name,
+        category: activeVehicle?.category,
+        dailyPrice: activeVehicle?.dailyPrice,
+        rentalDays,
+        pickupHub: activeHubObj.name,
+        pickupDate: `${pickupDate} at ${pickupTime}`,
+        dropoffDate: `${dropoffDate} at ${dropoffTime}`,
+        totalAmount: priceCalculation.grandTotal,
+        deposit: priceCalculation.deposit,
+        paymentId: paymentId || 'pay_RZP_OFFLINE_' + Date.now(),
+        paymentStatus: 'PAID'
+      };
+
       setConfirmedBooking({
         bookingId,
         vehicle: activeVehicle!,
@@ -150,6 +169,15 @@ export const Rentals: React.FC = () => {
         pickupDate: `${pickupDate} at ${pickupTime}`,
         dropoffDate: `${dropoffDate} at ${dropoffTime}`
       });
+
+      // Send rental booking to backend server for Admin Dashboard
+      try {
+        await fetch('http://localhost:5000/api/rentals/book', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(bookingData)
+        });
+      } catch (err) {}
 
       toast.success(paymentId 
         ? `Razorpay Payment Successful! Txn ID: ${paymentId}` 
@@ -316,10 +344,10 @@ export const Rentals: React.FC = () => {
                 <button
                   key={cat.id}
                   onClick={() => setSelectedCategory(cat.id)}
-                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+                  className={`chip-button ${
                     selectedCategory === cat.id
-                      ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
-                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700'
+                      ? 'chip-button-active'
+                      : 'chip-button-inactive'
                   }`}
                 >
                   <IconComp className="h-4 w-4" />
@@ -337,7 +365,7 @@ export const Rentals: React.FC = () => {
               placeholder="Search Activa, RE, Vespa..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl pl-9 pr-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              className="w-full bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl pl-9 pr-4 py-2 text-sm focus:border-amber-500 focus:outline-none"
             />
           </div>
         </div>
@@ -354,27 +382,23 @@ export const Rentals: React.FC = () => {
             {filteredVehicles.map((vehicle) => (
               <div 
                 key={vehicle.id}
-                className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group"
+                className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-md hover:shadow-xl transition-all duration-200 flex flex-col justify-between"
               >
                 {/* Vehicle Image & Badge */}
-                <div className="relative h-52 overflow-hidden bg-gray-100 dark:bg-gray-900">
+                <div className="relative h-48 bg-gray-100 dark:bg-gray-700 overflow-hidden group">
                   <img
                     src={vehicle.image}
                     alt={vehicle.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
-                  {vehicle.badge && (
-                    <span className="absolute top-3 left-3 bg-amber-400 text-gray-950 text-xs font-bold px-2.5 py-1 rounded-full shadow-md">
-                      {vehicle.badge}
-                    </span>
-                  )}
-                  <span className="absolute top-3 right-3 bg-black/60 backdrop-blur-md text-white text-xs font-medium px-2.5 py-1 rounded-full flex items-center gap-1">
-                    <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-                    {vehicle.rating} ({vehicle.reviewCount})
-                  </span>
-                  <div className="absolute bottom-3 left-3 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm text-gray-900 dark:text-gray-100 text-xs font-medium px-2.5 py-1 rounded-md">
-                    {vehicle.categoryLabel}
+                  <div className="absolute top-3 left-3 bg-gray-900/80 backdrop-blur-sm text-white px-2.5 py-1 rounded-full text-xs font-semibold">
+                    {vehicle.type === 'scooter' ? '🛵 Scooter' : vehicle.type === 'cruiser' ? '🏍️ Cruiser Bike' : vehicle.type === 'electric' ? '⚡ EV' : '🚗 Car / SUV'}
                   </div>
+                  {vehicle.badge && (
+                    <div className="absolute top-3 right-3 bg-amber-500 text-gray-950 px-2.5 py-1 rounded-full text-xs font-extrabold shadow-md">
+                      {vehicle.badge}
+                    </div>
+                  )}
                 </div>
 
                 {/* Card Content */}
@@ -383,12 +407,12 @@ export const Rentals: React.FC = () => {
                     <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
                       {vehicle.name}
                     </h3>
-                    <p className="text-xs text-blue-600 dark:text-blue-400 font-medium mb-4">
+                    <p className="text-xs text-amber-600 dark:text-amber-400 font-semibold mb-4">
                       💡 {vehicle.popularFor}
                     </p>
 
                     {/* Specs Grid */}
-                    <div className="grid grid-cols-3 gap-2 bg-gray-50 dark:bg-gray-700/50 p-2.5 rounded-xl text-xs mb-4 text-gray-600 dark:text-gray-300">
+                    <div className="grid grid-cols-3 gap-2 bg-gray-50 dark:bg-gray-700/50 p-2.5 rounded-xl text-xs mb-4 text-gray-600 dark:text-gray-300 border border-gray-100 dark:border-gray-600">
                       <div className="flex flex-col items-center text-center">
                         <span className="font-semibold text-gray-900 dark:text-gray-100">{vehicle.engineCc}</span>
                         <span className="text-[10px] text-gray-400">Power</span>
@@ -403,36 +427,26 @@ export const Rentals: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Features list */}
-                    <ul className="space-y-1.5 mb-5 text-xs text-gray-600 dark:text-gray-300">
-                      {vehicle.features.slice(0, 3).map((feat, idx) => (
-                        <li key={idx} className="flex items-center gap-1.5">
-                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
-                          <span>{feat}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+                    {/* Pricing & CTA */}
+                    <div className="pt-4 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between">
+                      <div>
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-2xl font-extrabold text-gray-900 dark:text-white">₹{vehicle.dailyPrice}</span>
+                          <span className="text-xs text-gray-500 font-medium">/day</span>
+                        </div>
+                        <div className="text-[11px] text-gray-400 font-medium">
+                          Deposit: ₹{vehicle.deposit} (Refundable)
+                        </div>
+                      </div>
 
-                  {/* Pricing & CTA */}
-                  <div className="pt-4 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between">
-                    <div>
-                      <div className="flex items-baseline gap-1">
-                        <span className="text-2xl font-extrabold text-gray-900 dark:text-white">₹{vehicle.dailyPrice}</span>
-                        <span className="text-xs text-gray-500">/day</span>
-                      </div>
-                      <div className="text-[11px] text-gray-400">
-                        Deposit: ₹{vehicle.deposit} (Refundable)
-                      </div>
+                      <button
+                        onClick={() => setActiveVehicle(vehicle)}
+                        className="btn-primary !px-5 !py-2.5 !text-sm shadow-md hover:shadow-lg transition-all"
+                      >
+                        Book Now
+                        <ChevronRight className="h-4 w-4" />
+                      </button>
                     </div>
-
-                    <button
-                      onClick={() => setActiveVehicle(vehicle)}
-                      className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2.5 rounded-xl text-sm transition-all shadow-md shadow-blue-500/20 flex items-center gap-1.5"
-                    >
-                      Book Now
-                      <ChevronRight className="h-4 w-4" />
-                    </button>
                   </div>
                 </div>
               </div>
