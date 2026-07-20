@@ -35,12 +35,12 @@ export const RentalBanner: React.FC = () => {
           <div className="shrink-0 flex flex-col sm:flex-row lg:flex-col gap-3 w-full sm:w-auto">
             <Link
               to="/rentals"
-              className="bg-blue-500 hover:bg-blue-600 text-white font-extrabold px-6 py-3.5 rounded-2xl text-center shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2 transition-all hover:scale-105"
+              className="btn-primary !text-lg !px-8 !py-4 shadow-xl hover:scale-105 transition-all"
             >
-              Browse Rental Fleet
+              Browse Rental Fleet 🛵
               <ChevronRight className="h-5 w-5" />
             </Link>
-            <span className="text-[11px] text-gray-400 text-center">Starting at just ₹450/day</span>
+            <span className="text-[11px] text-gray-300 text-center font-medium">Starting at just ₹450/day</span>
           </div>
         </div>
       </div>
