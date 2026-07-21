@@ -38,10 +38,10 @@ export const generateWebsiteLink = (url: string) => {
 
 // Contact information for different venues/services
 export const contactInfo = {
-  goaExplorer: {
+  sushegaadGoa: {
     phone: '+91 9876543210',
-    email: 'info@goaexplorer.com',
-    website: 'www.goaexplorer.com',
+    email: 'info@sushegaadgoa.com',
+    website: 'www.sushegaadgoa.com',
     whatsapp: '+919876543210'
   },
   emergency: {
@@ -63,12 +63,12 @@ export const generateReservationLink = (venueType: string, venueName: string) =>
   
   switch (venueType) {
     case 'restaurant':
-      return generateWhatsAppLink(contactInfo.goaExplorer.whatsapp, message);
+      return generateWhatsAppLink(contactInfo.sushegaadGoa.whatsapp, message);
     case 'hotel':
-      return generateEmailLink(contactInfo.goaExplorer.email, `Reservation Inquiry - ${venueName}`, message);
+      return generateEmailLink(contactInfo.sushegaadGoa.email, `Reservation Inquiry - ${venueName}`, message);
     case 'nightclub':
-      return generatePhoneLink(contactInfo.goaExplorer.phone);
+      return generatePhoneLink(contactInfo.sushegaadGoa.phone);
     default:
-      return generateWhatsAppLink(contactInfo.goaExplorer.whatsapp, message);
+      return generateWhatsAppLink(contactInfo.sushegaadGoa.whatsapp, message);
   }
 };

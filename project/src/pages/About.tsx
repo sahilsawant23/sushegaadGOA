@@ -52,7 +52,7 @@ const About: React.FC = () => {
             transition={{ duration: 0.8 }}
           >
             <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 drop-shadow-lg font-serif">
-              About GoaExplorer
+              About Sushegaad Goa
             </h1>
             <p className="text-xl text-gray-300 max-w-2xl mx-auto">
               Your trusted partner in discovering the magic, beauty, and culture of Goa
@@ -74,7 +74,7 @@ const About: React.FC = () => {
             <div>
               <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">Our Story</h2>
               <p className="text-gray-600 dark:text-gray-300 leading-relaxed mb-4">
-                Founded in 2009, GoaExplorer was born from a passion for sharing the incredible beauty and rich culture of Goa with travelers from around the world. What started as a small local tour company has grown into one of Goa's most trusted tourism partners.
+                Founded in 2009, Sushegaad Goa was born from a passion for sharing the incredible beauty and rich culture of Goa with travelers from around the world. What started as a small local tour company has grown into one of Goa's most trusted tourism partners.
               </p>
               <p className="text-gray-600 dark:text-gray-300 leading-relaxed mb-4">
                 We believe that travel is not just about seeing places, but about experiencing cultures, meeting people, and creating memories that last a lifetime. Our team of local experts and passionate guides are dedicated to showing you the real Goa - beyond the typical tourist spots.
@@ -86,7 +86,7 @@ const About: React.FC = () => {
             <div className="relative">
               <img
                 src="https://files.worldsbestweddingphotos.com/s3fs-public/inline-images/proud-groom-with-groomsmen-julien-laurent-georges.jpg?VersionId=wy8kUonDARPQ_IpFiuhwaZ864KBgw.3q"
-                alt="About GoaExplorer"
+                alt="About Sushegaad Goa"
                 className="rounded-xl shadow-lg w-full"
               />
             </div>

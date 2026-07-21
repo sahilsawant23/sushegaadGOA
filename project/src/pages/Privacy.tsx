@@ -64,7 +64,7 @@ const Privacy: React.FC = () => {
                     <section>
                         <h2 className="text-xl font-semibold text-gray-900 mb-2">6. Contact Us</h2>
                         <p>
-                            If you have any questions about this Privacy Policy, please contact us at privacy@goaexplorer.com.
+                            If you have any questions about this Privacy Policy, please contact us at privacy@sushegaadgoa.com.
                         </p>
                     </section>
                 </div>

@@ -58,7 +58,7 @@ const Contact: React.FC = () => {
     {
       icon: Mail,
       title: 'Email',
-      details: ['info@goaexplorer.com', 'tours@goaexplorer.com'],
+      details: ['info@sushegaadgoa.com', 'tours@sushegaadgoa.com'],
       color: 'bg-orange-100 text-orange-600'
     },
     {

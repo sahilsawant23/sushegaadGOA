@@ -35,8 +35,8 @@ const Footer: React.FC = () => {
             <ul className="space-y-2 text-sm">
               <li><Link to="/" className="text-slate-300 hover:text-white transition-colors">Home</Link></li>
               <li><Link to="/tours" className="text-slate-300 hover:text-white transition-colors">Tours & Activities</Link></li>
-              <li><Link to="/rentals" className="text-blue-400 font-semibold hover:text-white transition-colors">Scooter & Bike Rentals 🛵</Link></li>
-              <li><Link to="/group-planner" className="text-amber-400 font-semibold hover:text-white transition-colors">Group Trip Planner 👥</Link></li>
+              <li><Link to="/rentals" className="text-blue-400 font-semibold hover:text-white transition-colors">Scooter & Bike Rentals</Link></li>
+              <li><Link to="/group-planner" className="text-amber-400 font-semibold hover:text-white transition-colors">Group Trip Planner</Link></li>
               <li><Link to="/destinations" className="text-slate-300 hover:text-white transition-colors">Destinations</Link></li>
               <li><Link to="/nightlife" className="text-slate-300 hover:text-white transition-colors">Nightlife Explorer</Link></li>
             </ul>
@@ -51,7 +51,7 @@ const Footer: React.FC = () => {
                   onClick={() => setShowSOS(true)}
                   className="text-rose-400 hover:text-rose-300 font-semibold flex items-center gap-2 transition-colors"
                 >
-                  <ShieldAlert className="h-4 w-4 text-rose-500 animate-pulse" /> Emergency SOS Radar 🚨
+                  <ShieldAlert className="h-4 w-4 text-rose-500 animate-pulse" /> Emergency SOS Radar
                 </button>
               </li>
               <li><Link to="/about" className="text-slate-300 hover:text-white transition-colors">About Sushegaad Goa</Link></li>

@@ -56,7 +56,7 @@ const Terms: React.FC = () => {
                     <section>
                         <h2 className="text-xl font-semibold text-gray-900 mb-2">6. Contact Us</h2>
                         <p>
-                            If you have any questions about these Terms, please contact us at info@goaexplorer.com.
+                            If you have any questions about these Terms, please contact us at info@sushegaadgoa.com.
                         </p>
                     </section>
                 </div>
