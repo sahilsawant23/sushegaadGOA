@@ -335,22 +335,22 @@ export const RENTAL_VEHICLES: RentalVehicle[] = [
 
 export const GOA_SAFETY_RULES: SafetyRule[] = [
   {
-    icon: '🪖',
+    icon: '',
     title: 'Helmets Mandatory',
     description: 'Wearing an ISI-certified helmet is strictly mandatory by Goa Traffic Police for both rider and pillion rider.'
   },
   {
-    icon: '🟨',
+    icon: '',
     title: 'Yellow Commercial Plate',
     description: 'Ensure your rented vehicle has yellow-on-black registration plates (commercial self-drive permit). Renting white-plate private vehicles is illegal in Goa.'
   },
   {
-    icon: '📄',
+    icon: '',
     title: 'Carry Driving License & ID',
     description: 'Keep your valid original Indian Driving License or International Driving Permit (IDP) along with your digital booking voucher.'
   },
   {
-    icon: '🍷',
+    icon: '',
     title: 'Strict Zero-Tolerance Drink & Drive',
     description: 'Goa Police conduct random breathalyzer checks across coastal belts. Never drive under the influence of alcohol.'
   }

@@ -51,7 +51,7 @@ const Tours: React.FC = () => {
 
   const filteredTours = useMemo(() => {
     if (!tours) return [];
-    let filtered = tours.filter(tour => {
+    const filtered = tours.filter(tour => {
       const matchesSearch = tour.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (tour.description && tour.description.toLowerCase().includes(searchQuery.toLowerCase())) ||
         (tour.destination_name && tour.destination_name.toLowerCase().includes(searchQuery.toLowerCase()));
