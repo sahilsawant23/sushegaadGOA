@@ -108,46 +108,88 @@ export const ChatbotProvider: React.FC<{ children: ReactNode }> = ({ children })
     dispatch({ type: 'TOGGLE_CHAT' });
   };
 
-  const sendMessage = (message: string) => {
+  const sendMessage = async (message: string) => {
     // Add user message
     dispatch({ type: 'SEND_MESSAGE', payload: message });
     
     // Set typing indicator
     dispatch({ type: 'SET_TYPING', payload: true });
     
-    // Generate bot response after a delay
+    try {
+      const response = await fetch('/api/chatbot/query', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message, context: state.context })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data.reply) {
+          dispatch({ 
+            type: 'RECEIVE_MESSAGE', 
+            payload: { text: data.reply, type: 'text' } 
+          });
+          return;
+        }
+      }
+    } catch (err) {
+      console.log('Realtime chatbot API fallback:', err);
+    }
+
+    // Fallback to local response generator if API isn't reachable
     setTimeout(() => {
       const botResponse = generateBotResponse(message, state.context);
       dispatch({ 
         type: 'RECEIVE_MESSAGE', 
         payload: { text: botResponse, type: 'text' } 
       });
-    }, 1000 + Math.random() * 1000); // Random delay between 1-2 seconds
+    }, 1000);
   };
 
-  const handleQuickReply = (reply: QuickReply) => {
+  const handleQuickReply = async (reply: QuickReply) => {
     // Add user message
     dispatch({ type: 'SEND_MESSAGE', payload: reply.text });
     
     // Set typing indicator
     dispatch({ type: 'SET_TYPING', payload: true });
     
-    // Handle specific actions
+    try {
+      const response = await fetch('/api/chatbot/query', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: reply.text, context: state.context })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data.reply) {
+          dispatch({ 
+            type: 'RECEIVE_MESSAGE', 
+            payload: { text: data.reply, type: 'text' } 
+          });
+          return;
+        }
+      }
+    } catch (err) {
+      console.log('Realtime chatbot quick reply fallback:', err);
+    }
+
+    // Handle specific actions fallback
     setTimeout(() => {
       let botResponse = '';
       
       switch (reply.action) {
         case 'show_tours':
-          botResponse = "🎯 Here are our popular tour categories. Which type of experience interests you most?";
+          botResponse = "Here are our popular tour categories. Which type of experience interests you most?";
           break;
         case 'show_beaches':
-          botResponse = "🏖️ Goa has 40+ stunning beaches! Which region would you like to explore?";
+          botResponse = "Goa has 40+ stunning beaches! Which region would you like to explore?";
           break;
         case 'show_nightlife':
-          botResponse = "🌙 **Goa Nightlife Guide**\n\n**North Goa Hotspots:**\n• Tito's & Mambo's (Baga)\n• Club LPK (Calangute)\n• Curlies Beach Shack (Anjuna)\n\n**South Goa Experiences:**\n• Silent Noise Club (Unique silent disco)\n• Beach shacks in Palolem\n• Casino cruises\n\nWhat type of nightlife experience are you looking for?";
+          botResponse = "**Goa Nightlife Guide**\n\n**North Goa Hotspots:**\n• Tito's & Mambo's (Baga)\n• Club LPK (Calangute)\n• Curlies Beach Shack (Anjuna)\n\n**South Goa Experiences:**\n• Silent Noise Club (Unique silent disco)\n• Beach shacks in Palolem\n• Casino cruises\n\nWhat type of nightlife experience are you looking for?";
           break;
         case 'show_help':
-          botResponse = "❓ **How can I help you?**\n\n• 📅 Booking information\n• 💳 Payment methods\n• ❌ Cancellation policy\n• 📞 Contact support\n\nWhat would you like to know more about?";
+          botResponse = "**How can I help you?**\n\n• Booking information\n• Payment methods\n• Cancellation policy\n• Contact support\n\nWhat would you like to know more about?";
           break;
         default:
           botResponse = generateBotResponse(reply.text, state.context);

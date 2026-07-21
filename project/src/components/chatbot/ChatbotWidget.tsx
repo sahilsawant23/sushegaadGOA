@@ -110,7 +110,7 @@ const ChatbotWidget: React.FC = () => {
                   <MessageCircle className="h-4 w-4" />
                 </div>
                 <div>
-                  <h3 className="font-semibold">GoaExplorer Assistant</h3>
+                  <h3 className="font-semibold">Sushegaad Goa Assistant</h3>
                   <p className="text-xs text-blue-100">
                     {state.isTyping ? 'Typing...' : 'Online'}
                   </p>
