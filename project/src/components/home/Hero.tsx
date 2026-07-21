@@ -38,7 +38,7 @@ const Hero: React.FC = () => {
           transition={{ duration: 0.7 }}
         >
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white font-medium text-xs tracking-wide mb-6">
-            ✨ Experience Goa's Heritage, Beaches & Nightlife
+            Experience Goa's Heritage, Beaches & Nightlife
           </div>
 
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight mb-6 leading-tight">

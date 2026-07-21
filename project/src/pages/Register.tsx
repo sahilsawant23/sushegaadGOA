@@ -52,7 +52,7 @@ const Register: React.FC = () => {
       tag: "Coastal Paradises",
       title: "Explore Secret Beaches & Hidden Gems",
       subtitle: "Get insider tips for South Goa beaches, water sports & sunset cruises.",
-      badge: "🌴 150+ Verified Local Guides",
+      badge: "150+ Verified Local Guides",
       location: "Palolem Beach, South Goa"
     },
     {
@@ -60,7 +60,7 @@ const Register: React.FC = () => {
       tag: "Culture & Cuisine",
       title: "Immerse in Authentic Goan Life",
       subtitle: "Experience spice plantation tours, heritage walks & famous Goan seafood.",
-      badge: "🛡️ 100% Safe Booking",
+      badge: "100% Safe Booking",
       location: "Fontainhas, Panaji"
     }
   ];

@@ -22,13 +22,13 @@ interface ItineraryDay {
 }
 
 const INTERESTS_OPTIONS = [
-  { id: 'beaches', label: '🏖️ Pristine Beaches', category: 'Beaches' },
-  { id: 'nightlife', label: '🎉 Nightlife & Clubs', category: 'Nightlife' },
-  { id: 'history', label: '🏛️ Heritage & History', category: 'Heritage' },
-  { id: 'adventure', label: '🏄 Adventure & Water Sports', category: 'Adventure' },
-  { id: 'food', label: '🥘 Goan Food & Shacks', category: 'Food' },
-  { id: 'spiritual', label: '🛕 Temples & Churches', category: 'Spiritual' },
-  { id: 'nature', label: '🌲 Nature & Waterfalls', category: 'Nature' },
+  { id: 'beaches', label: 'Pristine Beaches', category: 'Beaches' },
+  { id: 'nightlife', label: 'Nightlife & Clubs', category: 'Nightlife' },
+  { id: 'history', label: 'Heritage & History', category: 'Heritage' },
+  { id: 'adventure', label: 'Adventure & Water Sports', category: 'Adventure' },
+  { id: 'food', label: 'Goan Food & Shacks', category: 'Food' },
+  { id: 'spiritual', label: 'Temples & Churches', category: 'Spiritual' },
+  { id: 'nature', label: 'Nature & Waterfalls', category: 'Nature' },
 ];
 
 const AITripPlanner: React.FC = () => {

@@ -62,7 +62,7 @@ const INITIAL_MEMBERS: GroupMember[] = [
 export const GroupPlanner: React.FC = () => {
   const [tripCode, setTripCode] = useState('GOA-GANG-9842');
   const [inputCode, setInputCode] = useState('');
-  const [tripName, setTripName] = useState('Goa Summer Beach & Sunset Reunion 🌴');
+  const [tripName, setTripName] = useState('Goa Summer Beach & Sunset Reunion');
   const [activeTab, setActiveTab] = useState<'polls' | 'itinerary' | 'expenses' | 'checklist'>('polls');
 
   const [members, setMembers] = useState<GroupMember[]>(INITIAL_MEMBERS);
@@ -410,7 +410,7 @@ export const GroupPlanner: React.FC = () => {
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <span className="px-3 py-1 rounded-full text-xs font-bold bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
-                  🗳️ REALTIME GROUP PLANNER
+                  REALTIME GROUP PLANNER
                 </span>
                 <span className="text-xs text-slate-400 font-medium">Trip Room Code: <b className="text-blue-600 dark:text-blue-400">{tripCode}</b></span>
               </div>
@@ -888,7 +888,7 @@ export const GroupPlanner: React.FC = () => {
                   <div className="flex items-center gap-2">
                     <h3 className="text-xl font-extrabold text-slate-900 dark:text-white">{selectedMember.name}</h3>
                     <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300">
-                      {selectedMember.role === 'leader' ? '👑 Leader' : '👥 Member'}
+                      {selectedMember.role === 'leader' ? 'Leader' : 'Member'}
                     </span>
                   </div>
                   <p className="text-xs text-slate-400">Active Squad Traveler • Room {tripCode}</p>

@@ -335,7 +335,7 @@ const AdminDashboard: React.FC = () => {
     { id: 'overview' as const, icon: Clock, label: 'Overview' },
     { id: 'users' as const, icon: Users, label: 'User Directory' },
     { id: 'bookings' as const, icon: Calendar, label: 'Bookings & Orders' },
-    { id: 'rentals' as const, icon: Bike, label: 'Scooter & Car Rentals 🛵' },
+    { id: 'rentals' as const, icon: Bike, label: 'Scooter & Car Rentals' },
     { id: 'guides' as const, icon: Award, label: 'Guides & Verification' },
     { id: 'messages' as const, icon: MessageSquare, label: 'Inbound Messages' },
     { id: 'reviews' as const, icon: Star, label: 'User Reviews' },
@@ -892,10 +892,10 @@ const AdminDashboard: React.FC = () => {
                                   onChange={(e) => handleUpdateRentalStatus(r.booking_id || r.id, e.target.value)}
                                   className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 >
-                                  <option value="Confirmed">🟢 Confirmed</option>
-                                  <option value="Vehicle Handed Over">🔑 Vehicle Handed Over</option>
-                                  <option value="Completed">🏁 Completed & Returned</option>
-                                  <option value="Cancelled">🔴 Cancelled</option>
+                                  <option value="Confirmed">Confirmed</option>
+                                  <option value="Vehicle Handed Over">Vehicle Handed Over</option>
+                                  <option value="Completed">Completed & Returned</option>
+                                  <option value="Cancelled">Cancelled</option>
                                 </select>
                               </td>
 

@@ -48,7 +48,7 @@ const Login: React.FC = () => {
       tag: "Coastal Beaches",
       title: "Discover Untouched Coastal Paradises",
       subtitle: "From serene South Goa palm beaches to electric North Goa coastal sunsets.",
-      badge: "⭐ 4.9/5 (10,000+ Traveler Reviews)",
+      badge: "4.9/5 (10,000+ Traveler Reviews)",
       location: "Palolem Beach, South Goa"
     },
     {
@@ -56,7 +56,7 @@ const Login: React.FC = () => {
       tag: "Heritage & Culture",
       title: "Immerse in Portuguese Colonial Charm",
       subtitle: "Stroll colorful Latin quarters, historic basilicas, and spice plantations.",
-      badge: "🌴 150+ Verified Local Guides",
+      badge: "150+ Verified Local Guides",
       location: "Fontainhas, Panaji"
     },
     {
@@ -64,7 +64,7 @@ const Login: React.FC = () => {
       tag: "Adventures",
       title: "Experience Thrilling Water Sports & Treks",
       subtitle: "Dudhsagar jeep safaris, scuba diving, kayaking, and luxury boat cruises.",
-      badge: "🛡️ 100% Verified Bookings",
+      badge: "100% Verified Bookings",
       location: "Dudhsagar Waterfalls"
     }
   ];

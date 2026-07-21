@@ -53,7 +53,7 @@ const GuideRegister = () => {
         tag: "Adventure Host",
         title: "Lead Eco Treks & Water Sports",
         subtitle: "Organize Dudhsagar safaris, mangrove kayaking, and island boat trips.",
-        badge: "🌴 Direct Bookings & Payouts",
+        badge: "Direct Bookings & Payouts",
         location: "Dudhsagar Waterfalls"
       }
     ];

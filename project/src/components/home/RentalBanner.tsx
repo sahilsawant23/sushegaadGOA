@@ -13,7 +13,7 @@ export const RentalBanner: React.FC = () => {
               <Zap className="h-3.5 w-3.5 fill-current" /> Self-Drive Transport Hub
             </div>
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight">
-              Rent Scooters, Royal Enfields & Thar Jeeps in Goa 🛵
+              Rent Scooters, Royal Enfields & Thar Jeeps in Goa
             </h2>
             <p className="text-gray-300 text-sm sm:text-base leading-relaxed">
               Explore North & South Goa at your own pace with verified commercial yellow-plate rentals. Free pickup at MOPA Airport, Dabolim Airport, Thivim & beach hubs.
@@ -37,7 +37,7 @@ export const RentalBanner: React.FC = () => {
               to="/rentals"
               className="btn-primary !text-lg !px-8 !py-4 shadow-xl hover:scale-105 transition-all"
             >
-              Browse Rental Fleet 🛵
+              Browse Rental Fleet
               <ChevronRight className="h-5 w-5" />
             </Link>
             <span className="text-[11px] text-gray-300 text-center font-medium">Starting at just ₹450/day</span>

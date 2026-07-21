@@ -391,11 +391,11 @@ export const festivals: Festival[] = [
 ];
 
 export const festivalCategories = [
-  { id: 'all', name: 'All Festivals', icon: '🎉' },
-  { id: 'cultural', name: 'Cultural', icon: '🎭' },
-  { id: 'religious', name: 'Religious', icon: '🙏' },
-  { id: 'music', name: 'Music & EDM', icon: '🎵' },
-  { id: 'seasonal', name: 'Seasonal', icon: '🌸' }
+  { id: 'all', name: 'All Festivals', icon: '' },
+  { id: 'cultural', name: 'Cultural', icon: '' },
+  { id: 'religious', name: 'Religious', icon: '' },
+  { id: 'music', name: 'Music & EDM', icon: '' },
+  { id: 'seasonal', name: 'Seasonal', icon: '' }
 ];
 
 export const getFestivalsByCategory = (category: string) => {

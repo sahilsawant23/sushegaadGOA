@@ -12,7 +12,7 @@ export const EmergencySOSModal: React.FC<EmergencySOSProps> = ({ isOpen, onClose
 
   const handleBroadcastSOS = () => {
     setIsSOSActive(true);
-    toast.error('🚨 SOS ALERT BROADCASTED to Drishti Marine Lifesavers & Goa Police (112)!', {
+    toast.error('SOS ALERT BROADCASTED to Drishti Marine Lifesavers & Goa Police (112)!', {
       duration: 6000
     });
   };
@@ -54,7 +54,7 @@ export const EmergencySOSModal: React.FC<EmergencySOSProps> = ({ isOpen, onClose
             }`}
           >
             <Radio className="h-5 w-5 animate-pulse" />
-            <span>{isSOSActive ? '🚨 SOS ACTIVE - DISPATCH NOTIFIED (112)' : 'PRESS TO BROADCAST EMERGENCY SOS'}</span>
+            <span>{isSOSActive ? 'SOS ACTIVE - DISPATCH NOTIFIED (112)' : 'PRESS TO BROADCAST EMERGENCY SOS'}</span>
           </button>
           <p className="text-[11px] text-slate-400 mt-2">Transmits real-time GPS coordinates & safety status to nearest Lifeguard Tower</p>
         </div>

@@ -238,7 +238,7 @@ export const Rentals: React.FC = () => {
               <Zap className="h-3.5 w-3.5 fill-current" /> Official Yellow-Plate Self Drive Rentals
             </span>
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight mb-4">
-              Explore Goa On Wheels 🛵
+              Explore Goa On Wheels
             </h1>
             <p className="text-lg text-blue-100 mb-8 leading-relaxed">
               Rent verified scooters, Royal Enfields, retro Vespas, and convertible Jeeps with zero hassle. Instant airport & beach hub pickups with free helmets and 24/7 roadside assistance.
@@ -392,7 +392,7 @@ export const Rentals: React.FC = () => {
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                   <div className="absolute top-3 left-3 bg-gray-900/80 backdrop-blur-sm text-white px-2.5 py-1 rounded-full text-xs font-semibold">
-                    {vehicle.type === 'scooter' ? '🛵 Scooter' : vehicle.type === 'cruiser' ? '🏍️ Cruiser Bike' : vehicle.type === 'electric' ? '⚡ EV' : '🚗 Car / SUV'}
+                    {vehicle.type === 'scooter' ? 'Scooter' : vehicle.type === 'cruiser' ? 'Cruiser Bike' : vehicle.type === 'electric' ? 'EV' : 'Car / SUV'}
                   </div>
                   {vehicle.badge && (
                     <div className="absolute top-3 right-3 bg-amber-500 text-gray-950 px-2.5 py-1 rounded-full text-xs font-extrabold shadow-md">
@@ -408,7 +408,7 @@ export const Rentals: React.FC = () => {
                       {vehicle.name}
                     </h3>
                     <p className="text-xs text-amber-600 dark:text-amber-400 font-semibold mb-4">
-                      💡 {vehicle.popularFor}
+                      {vehicle.popularFor}
                     </p>
 
                     {/* Specs Grid */}
