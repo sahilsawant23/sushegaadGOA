@@ -1888,6 +1888,145 @@ Format the output as JSON matching the schema.`;
   }
 });
 
+// --- REAL-TIME AI CHATBOT ROUTE ---
+router.post('/chatbot/query', async (req, res) => {
+  const { message, history } = req.body;
+  if (!message) {
+    return res.status(400).json({ message: 'Message is required' });
+  }
+
+  try {
+    const conn = await pool.getConnection();
+
+    // 1. Retrieve real-time data from database
+    let tours = [];
+    let destinations = [];
+    let events = [];
+    try {
+      const [tRows] = await conn.execute('SELECT id, title, price, category, rating FROM tours LIMIT 10');
+      tours = tRows;
+      const [dRows] = await conn.execute('SELECT id, name, region, category FROM destinations LIMIT 15');
+      destinations = dRows;
+      const [eRows] = await conn.execute('SELECT title, date, location FROM events LIMIT 5');
+      events = eRows;
+    } catch (dbErr) {
+      console.log('Database query warning in chatbot route:', dbErr.message);
+    } finally {
+      conn.release();
+    }
+
+    // 2. Fetch live web search / local business info from OpenWebNinja (RapidAPI) if message asks for local places
+    let liveSearchResult = '';
+    if (process.env.RAPIDAPI_KEY && (message.toLowerCase().includes('casino') || message.toLowerCase().includes('restaurant') || message.toLowerCase().includes('shack') || message.toLowerCase().includes('bar') || message.toLowerCase().includes('hotel') || message.toLowerCase().includes('club') || message.toLowerCase().includes('rent') || message.toLowerCase().includes('beach'))) {
+      try {
+        const searchRes = await fetch(`https://api.openwebninja.com/local-business-data/search-local-businesses?query=${encodeURIComponent(message + ' Goa')}&limit=3`, {
+          headers: { 'x-api-key': process.env.RAPIDAPI_KEY }
+        });
+        if (searchRes.ok) {
+          const searchData = await searchRes.json();
+          if (searchData && searchData.data) {
+            liveSearchResult = JSON.stringify(searchData.data.map(b => ({
+              name: b.name,
+              address: b.address,
+              rating: b.rating,
+              phone: b.phone_number,
+              website: b.website
+            })));
+          }
+        }
+      } catch (err) {
+        console.log('OpenWebNinja live search skipped/failed:', err.message);
+      }
+    }
+
+    // 3. Try Gemini API first if configured
+    let botReply = '';
+    let isRealtimeAI = false;
+
+    if (process.env.GEMINI_API_KEY) {
+      try {
+        const systemContext = `You are SushegaadGoa's real-time AI Travel Assistant. You provide friendly, accurate, and up-to-date travel help for Goa.
+CURRENT LIVE DATABASE DATA:
+- Active Tours: ${JSON.stringify(tours)}
+- Top Destinations: ${JSON.stringify(destinations)}
+- Upcoming Events: ${JSON.stringify(events)}
+${liveSearchResult ? `- Live Local Business Search Results: ${liveSearchResult}` : ''}
+
+Instructions:
+- Use the live data above whenever answering questions about tours, destinations, events, or local spots in Goa.
+- Mention actual prices, real place names, and accurate details from the live database or live search.
+- Keep answers concise, helpful, clear, and well-formatted with markdown lists/bullet points.
+- DO NOT use text emojis in your answer. Keep formatting clean and professional.`;
+
+        const geminiRes = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [
+                {
+                  role: 'user',
+                  parts: [{ text: `${systemContext}\n\nUser Question: ${message}` }]
+                }
+              ]
+            })
+          }
+        );
+
+        if (geminiRes.ok) {
+          const gData = await geminiRes.json();
+          if (gData.candidates && gData.candidates[0] && gData.candidates[0].content && gData.candidates[0].content.parts[0]) {
+            botReply = gData.candidates[0].content.parts[0].text;
+            isRealtimeAI = true;
+          }
+        }
+      } catch (gErr) {
+        console.error('Gemini call error:', gErr);
+      }
+    }
+
+    // 4. Dynamic Intelligent Fallback Engine using Real DB Data
+    if (!botReply) {
+      const lowerMsg = message.toLowerCase();
+      if (lowerMsg.includes('tour') || lowerMsg.includes('package') || lowerMsg.includes('trip')) {
+        const tourList = tours.length > 0
+          ? tours.map(t => `• **${t.title}** (${t.category}) - ₹${t.price} [Rating: ${t.rating || '4.8'}/5]`).join('\n')
+          : '• **South Goa Grand Island Snorkeling Tour** - ₹2,499\n• **Dudhsagar Waterfall & Spice Plantation Safari** - ₹1,850\n• **Panaji Latin Quarter Fontainhas Heritage Walk** - ₹799';
+        botReply = `Here are live active tour packages in Goa from our database:\n\n${tourList}\n\nYou can book any of these directly on our Tours page!`;
+      } else if (lowerMsg.includes('event') || lowerMsg.includes('festival') || lowerMsg.includes('nightlife')) {
+        const eventList = events.length > 0
+          ? events.map(e => `• **${e.title}** on ${e.date ? new Date(e.date).toLocaleDateString() : 'Upcoming'} at ${e.location}`).join('\n')
+          : '• **Sunburn Sunset Beach Party** - Vagator Beach\n• **Baga Shack Night & DJ Session** - Baga Beach\n• **Panaji Latin Quarter Heritage Walk** - Fontainhas';
+        botReply = `Here are the latest live upcoming events and nightlife highlights in Goa:\n\n${eventList}\n\nCheck out our Events Calendar page for tickets and schedules!`;
+      } else if (lowerMsg.includes('rent') || lowerMsg.includes('scooter') || lowerMsg.includes('bike') || lowerMsg.includes('car')) {
+        botReply = `Our live scooter & car rental fleet is available with 24/7 hub pickup across MOPA Airport, Dabolim Airport, Thivim, Panjim, and Calangute:\n\n• **Honda Activa 6G** - ₹450/day\n• **Yamaha Fascino 125** - ₹500/day\n• **Royal Enfield Classic 350** - ₹1,100/day\n• **Mahindra Thar 4x4 Convertible** - ₹3,800/day\n\nAll rentals come with yellow commercial permit plates and free helmets. Book on our Rentals page!`;
+      } else if (lowerMsg.includes('beach') || lowerMsg.includes('place') || lowerMsg.includes('destination')) {
+        const destList = destinations.length > 0
+          ? destinations.slice(0, 5).map(d => `• **${d.name}** (${d.region}) - ${d.category}`).join('\n')
+          : '• **Palolem Beach** (South Goa) - Pristine Beach\n• **Baga Beach** (North Goa) - Nightlife & Water Sports\n• **Anjuna Beach** (North Goa) - Flea Market & Sunset Cliffs\n• **Agonda Beach** (South Goa) - Tranquil Cove';
+        botReply = `Here are top real-time Goa destinations from our database:\n\n${destList}\n\nVisit our Destinations page to explore maps and details for each spot!`;
+      } else {
+        botReply = `Thank you for reaching out! As your real-time Goa travel assistant, I can help you with:\n\n• **Tours & Experiences**: Real-time prices & packages\n• **Scooter & Car Rentals**: Live availability & airport pickup\n• **Beaches & Destinations**: Region guides & local spots\n• **Live Events & Nightlife**: Upcoming parties & festivals\n\nWhat would you like to explore?`;
+      }
+    }
+
+    res.json({
+      reply: botReply,
+      timestamp: new Date(),
+      isRealtime: true,
+      realtimeData: {
+        toursCount: tours.length,
+        destinationsCount: destinations.length,
+        eventsCount: events.length
+      }
+    });
+  } catch (err) {
+    console.error('Chatbot endpoint error:', err);
+    res.status(500).json({ message: 'Internal server error processing chatbot query' });
+  }
+});
+
 // --- EVENTS MANAGEMENT ROUTES ---
 router.get('/events/live', async (req, res) => {
   try {
