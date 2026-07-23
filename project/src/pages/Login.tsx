@@ -8,7 +8,6 @@ import {
   MapPin,
   ArrowLeft,
   Compass,
-  ShieldCheck,
   UserCheck,
   ChevronLeft,
   ChevronRight,
@@ -16,7 +15,6 @@ import {
   Play,
   Sparkles,
   Star,
-  CheckCircle2,
   Palmtree
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -28,7 +26,7 @@ const Login: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { signIn, adminSignIn, signInWithGoogle, signInWithFacebook, state } = useAuth();
-  
+
   const [showPassword, setShowPassword] = useState(false);
   const [selectedRole, setSelectedRole] = useState<RoleOption>('traveler');
   const [formData, setFormData] = useState({

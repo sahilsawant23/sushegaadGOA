@@ -1,30 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { 
-  Eye, 
-  EyeOff, 
-  Mail, 
-  Lock, 
-  User, 
-  MapPin, 
-  ArrowLeft, 
-  Sparkles, 
+import {
+  Eye,
+  EyeOff,
+  Mail,
+  Lock,
+  User,
+  MapPin,
+  ArrowLeft,
+  Sparkles,
   Star,
-  ChevronLeft, 
-  ChevronRight, 
-  Pause, 
+  ChevronLeft,
+  ChevronRight,
+  Pause,
   Play,
   Palmtree,
-  CheckCircle2
-} from 'lucide-react';
+}
+  from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
   const { signUp, signInWithGoogle, signInWithFacebook, state } = useAuth();
-  
+
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -33,7 +33,7 @@ const Register: React.FC = () => {
     password: '',
     confirmPassword: ''
   });
-  
+
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
 
@@ -52,7 +52,7 @@ const Register: React.FC = () => {
       tag: "Coastal Paradises",
       title: "Explore Secret Beaches & Hidden Gems",
       subtitle: "Get insider tips for South Goa beaches, water sports & sunset cruises.",
-      badge: "150+ Verified Local Guides",
+      badge: "🌴 150+ Verified Local Guides",
       location: "Palolem Beach, South Goa"
     },
     {
@@ -60,7 +60,7 @@ const Register: React.FC = () => {
       tag: "Culture & Cuisine",
       title: "Immerse in Authentic Goan Life",
       subtitle: "Experience spice plantation tours, heritage walks & famous Goan seafood.",
-      badge: "100% Safe Booking",
+      badge: "🛡️ 100% Safe Booking",
       location: "Fontainhas, Panaji"
     }
   ];
@@ -99,10 +99,10 @@ const Register: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-100 via-blue-50/50 to-teal-50/40 dark:from-gray-950 dark:via-gray-900 dark:to-slate-900 flex text-gray-900 dark:text-gray-100 font-sans transition-colors duration-200">
-      
+
       {/* Left Side: Registration Form */}
       <div className="flex-1 flex flex-col justify-between py-8 px-6 sm:px-12 lg:flex-none lg:w-[500px] xl:w-[540px] z-10">
-        
+
         {/* Brand Header */}
         <div className="flex items-center justify-between">
           <Link to="/" className="flex items-center space-x-2 group">
@@ -364,7 +364,7 @@ const Register: React.FC = () => {
               alt={slides[currentSlide].title}
               className="w-full h-full object-cover"
             />
-            
+
             {/* Vignette Overlay */}
             <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/30 to-transparent" />
 
@@ -407,9 +407,8 @@ const Register: React.FC = () => {
                       <button
                         key={idx}
                         onClick={() => setCurrentSlide(idx)}
-                        className={`h-2 rounded-full transition-all duration-300 ${
-                          idx === currentSlide ? 'w-8 bg-gradient-to-r from-blue-400 to-teal-400' : 'w-2 bg-white/40 hover:bg-white/70'
-                        }`}
+                        className={`h-2 rounded-full transition-all duration-300 ${idx === currentSlide ? 'w-8 bg-gradient-to-r from-blue-400 to-teal-400' : 'w-2 bg-white/40 hover:bg-white/70'
+                          }`}
                       />
                     ))}
                   </div>

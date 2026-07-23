@@ -5,6 +5,7 @@ const crypto = require('crypto');
 const mysql = require('mysql2/promise');
 const path = require('path');
 const Razorpay = require('razorpay');
+const axios = require('axios');
 const router = express.Router();
 
 const pool = require('./db');
@@ -712,6 +713,20 @@ router.post('/payments/verify', authenticateToken, async (req, res) => {
         .catch(err => console.error('Payment confirmation email failed:', err));
     }
 
+    // Trigger n8n booking workflow
+    if (process.env.N8N_BOOKING_WEBHOOK_URL) {
+      axios.post(process.env.N8N_BOOKING_WEBHOOK_URL, {
+        event: 'booking_confirmed',
+        bookingId: bookingId,
+        tourTitle: booking.booked_tour_title,
+        bookingDate: booking.booking_date,
+        totalPrice: booking.total_price,
+        guests: booking.guests || 1,
+        customerName: user ? user.full_name : 'Customer',
+        customerEmail: user ? user.email : ''
+      }).catch(err => console.error('Failed to trigger n8n booking webhook:', err.message));
+    }
+
     conn.release();
     res.json({ success: true, message: 'Payment verified and booking confirmed successfully!' });
   } catch (error) {
@@ -1355,6 +1370,21 @@ router.post('/contact', async (req, res) => {
            VALUES (?, ?, ?, ?, ?, NOW())`,
       [name, email, phone || '', subject || 'General Inquiry', message]
     );
+
+    // Trigger n8n contact workflow
+    if (process.env.N8N_CONTACT_WEBHOOK_URL) {
+      axios.post(process.env.N8N_CONTACT_WEBHOOK_URL, {
+        event: 'new_inquiry',
+        contact: {
+          name,
+          email,
+          phone: phone || '',
+          subject: subject || 'General Inquiry',
+          message
+        }
+      }).catch(err => console.error('Failed to trigger n8n contact webhook:', err.message));
+    }
+
     conn.release();
     res.status(201).json({ message: 'Message sent successfully' });
   } catch (error) {
