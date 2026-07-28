@@ -11,7 +11,6 @@ import {
   MapPin, 
   PieChart, 
   CheckSquare, 
-  Sparkles,
   Radio,
   LogIn
 } from 'lucide-react';
@@ -62,7 +61,7 @@ const INITIAL_MEMBERS: GroupMember[] = [
 export const GroupPlanner: React.FC = () => {
   const [tripCode, setTripCode] = useState('GOA-GANG-9842');
   const [inputCode, setInputCode] = useState('');
-  const [tripName, setTripName] = useState('Goa Summer Beach & Sunset Reunion');
+  const [tripName, setTripName] = useState('Goa Summer Beach & Sunset Reunion 🌴');
   const [activeTab, setActiveTab] = useState<'polls' | 'itinerary' | 'expenses' | 'checklist'>('polls');
 
   const [members, setMembers] = useState<GroupMember[]>(INITIAL_MEMBERS);
