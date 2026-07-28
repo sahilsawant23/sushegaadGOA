@@ -10,6 +10,7 @@ import Navbar from './components/common/Navbar';
 import Footer from './components/common/Footer';
 import ChatbotWidget from './components/chatbot/ChatbotWidget';
 import CompareTray from './components/common/CompareTray';
+import ScrollToTopButton from './components/common/ScrollToTopButton';
 import Home from './pages/Home';
 import Tours from './pages/Tours';
 import TourDetails from './pages/TourDetails';
@@ -119,6 +120,7 @@ const AppContent = () => {
       {!hideLayout && <Footer />}
       {!hideLayout && <ChatbotWidget />}
       {!hideLayout && <CompareTray />}
+      <ScrollToTopButton />
     </div>
   );
 };
