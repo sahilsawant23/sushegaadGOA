@@ -314,7 +314,7 @@ const Destinations: React.FC = () => {
 
                       <div className="mb-4">
                         <div className="flex flex-wrap gap-1">
-                          {beach.highlights.slice(0, 3).map((highlight, idx) => (
+                          {beach.highlights.slice(0, 3).map((highlight: string, idx: number) => (
                             <span
                               key={idx}
                               className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded"

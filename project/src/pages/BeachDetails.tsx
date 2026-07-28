@@ -137,7 +137,7 @@ const BeachDetails: React.FC = () => {
                       <div className="mb-8">
                           <h2 className="text-xl font-bold mb-4">Highlights</h2>
                           <div className="flex flex-wrap gap-2">
-                              {beach.highlights.map((highlight, index) => (
+                              {beach.highlights.map((highlight: string, index: number) => (
                                   <span
                                       key={index}
                                       className="bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 px-4 py-2 rounded-full text-sm font-medium transition-colors"
@@ -154,7 +154,7 @@ const BeachDetails: React.FC = () => {
                       <div className="mb-8">
                           <h2 className="text-xl font-bold mb-4">Popular Activities</h2>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                              {beach.activities.map((activity, index) => (
+                              {beach.activities.map((activity: string, index: number) => (
                                   <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-100 dark:border-gray-700">
                                       <div className="h-2 w-2 bg-amber-500 rounded-full" />
                                       <span className="text-gray-700 dark:text-gray-200 text-sm font-medium">{activity}</span>
@@ -169,7 +169,7 @@ const BeachDetails: React.FC = () => {
                         <div className="mb-8">
                             <h2 className="text-xl font-bold mb-4">Available Facilities</h2>
                             <ul className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                                {beach.facilities.map((facility, index) => (
+                                {beach.facilities.map((facility: string, index: number) => (
                                     <li key={index} className="flex items-center space-x-3">
                                         <Check className="h-4 w-4 text-emerald-600 flex-shrink-0" />
                                         <span>{facility}</span>
@@ -184,7 +184,7 @@ const BeachDetails: React.FC = () => {
                       <div className="mb-8">
                           <h2 className="text-xl font-bold mb-4">Best For</h2>
                           <div className="flex flex-wrap gap-3">
-                              {beach.bestFor.map((item, index) => (
+                              {beach.bestFor.map((item: string, index: number) => (
                                   <span key={index} className="px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-700 dark:text-gray-300 text-sm">
                                       {item}
                                   </span>
@@ -198,7 +198,7 @@ const BeachDetails: React.FC = () => {
                       <div className="mb-8">
                           <h2 className="text-xl font-bold mb-4">Nearby Attractions</h2>
                           <ul className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                              {beach.nearbyAttractions.map((place, index) => (
+                              {beach.nearbyAttractions.map((place: string, index: number) => (
                                   <li key={index} className="flex items-center space-x-3">
                                       <MapPin className="h-4 w-4 text-blue-600 flex-shrink-0" />
                                       <span>{place}</span>
@@ -213,7 +213,7 @@ const BeachDetails: React.FC = () => {
                       <div className="mb-8">
                           <h2 className="text-xl font-bold mb-4">Best Time to Visit</h2>
                           <div className="flex flex-wrap gap-2">
-                              {beach.bestTimeToVisit.map((month, index) => (
+                              {beach.bestTimeToVisit.map((month: string, index: number) => (
                                   <span key={index} className="text-xs bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 px-3 py-1.5 rounded-lg font-medium">
                                       {month}
                                   </span>
