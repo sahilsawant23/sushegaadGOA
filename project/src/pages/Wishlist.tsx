@@ -377,15 +377,23 @@ const Wishlist: React.FC = () => {
           transition={{ duration: 0.6 }}
           className="text-center py-16"
         >
-          <Heart className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No items in your wishlist</h3>
-          <p className="text-gray-600 dark:text-gray-450 mb-6">Start exploring and save your favorite {activeTab === 'places' ? 'hotels & dining spots' : activeTab} to your wishlist</p>
-          <Link
-            to={activeTab === 'tours' ? '/tours' : activeTab === 'beaches' ? '/destinations' : activeTab === 'nightlife' ? '/nightlife' : '/places'}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors font-medium shadow-md shadow-blue-500/20"
-          >
-            Explore {activeTab === 'places' ? 'Hotels & Dining' : activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
-          </Link>
+          <Heart className="h-16 w-16 text-gray-400 mx-auto mb-4 animate-pulse" />
+          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No items in your {activeTab} wishlist</h3>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">Start exploring and save your favorite {activeTab === 'places' ? 'hotels & dining spots' : activeTab} to your wishlist</p>
+          <div className="flex flex-wrap items-center justify-center gap-4">
+            <Link
+              to={activeTab === 'tours' ? '/tours' : activeTab === 'beaches' ? '/destinations' : activeTab === 'nightlife' ? '/destinations' : '/stays'}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors font-medium shadow-md shadow-blue-500/20"
+            >
+              Explore {activeTab === 'places' ? 'Stays & Dining' : activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
+            </Link>
+            <Link
+              to="/rentals"
+              className="bg-amber-500 hover:bg-amber-600 text-white px-6 py-3 rounded-lg transition-colors font-medium shadow-md shadow-amber-500/20"
+            >
+              Explore Self-Drive Rentals
+            </Link>
+          </div>
         </motion.div>
       )}
     </div>
