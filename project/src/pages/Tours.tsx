@@ -4,6 +4,8 @@ import { Star, Clock, Users, Filter, Search, SlidersHorizontal, Plus } from 'luc
 import { motion } from 'framer-motion';
 import { useCompare } from '../context/CompareContext';
 
+import { mockTours } from '../data/mockTours';
+
 const Tours: React.FC = () => {
   const [searchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
@@ -31,20 +33,19 @@ const Tours: React.FC = () => {
       .then(res => res.json())
       .then(data => {
         // Transform data to match component expectations
-        const transformedTours = Array.isArray(data) ? data.map((tour: any) => ({
+        const transformedTours = Array.isArray(data) && data.length > 0 ? data.map((tour: any) => ({
           ...tour,
-          // Ensure images array exists for any legacy usage, but prefer image_url
           images: tour.image_url ? [tour.image_url] : (tour.images || []),
-          // Map DB fields to component fields
           duration: tour.duration || `${tour.duration_hours || 0} hours`,
           maxGroupSize: tour.maxGroupSize || tour.max_participants,
           reviewCount: tour.reviewCount || tour.review_count || 0
-        })) : [];
+        })) : mockTours;
         setTours(transformedTours);
         setLoading(false);
       })
       .catch(err => {
-        console.error('Failed to load tours', err);
+        console.error('Failed to load live tours, fallback to mock data', err);
+        setTours(mockTours);
         setLoading(false);
       });
   }, []);
