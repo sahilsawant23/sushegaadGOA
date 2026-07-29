@@ -39,6 +39,34 @@ router.get('/health', async (req, res) => {
   }
 });
 
+// Contact Us Form Submission Endpoint
+router.post('/contact', async (req, res) => {
+  const { name, email, phone, subject, message } = req.body;
+  if (!name || !email || !message) {
+    return res.status(400).json({ message: 'Name, email, and message are required.' });
+  }
+
+  try {
+    console.log(`[Contact Form Received] From: ${name} <${email}> | Subject: ${subject || 'General Inquiry'}`);
+    
+    // Dispatch async webhook notification to n8n if webhook URL is configured
+    if (process.env.N8N_WEBHOOK_URL) {
+      axios.post(process.env.N8N_WEBHOOK_URL, {
+        event: 'contact_form_submitted',
+        data: { name, email, phone, subject, message, timestamp: new Date().toISOString() }
+      }).catch(err => console.error('[n8n Webhook Error]:', err.message));
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Thank you for reaching out to Sushegaad Goa! We have received your inquiry and will respond within 24 hours.'
+    });
+  } catch (err) {
+    console.error('Contact form submission error:', err);
+    res.status(500).json({ message: 'Internal server error processing contact submission.' });
+  }
+});
+
 // Register user
 router.post('/register', async (req, res) => {
   const { email, password, fullName } = req.body;
