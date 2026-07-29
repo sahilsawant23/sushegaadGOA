@@ -54,6 +54,7 @@ const Footer: React.FC = () => {
                   <ShieldAlert className="h-4 w-4 text-rose-500 animate-pulse" /> Emergency SOS Radar
                 </button>
               </li>
+              <li><Link to="/water-safety" className="text-cyan-400 hover:text-white transition-colors font-medium">Ocean & Water Safety Radar</Link></li>
               <li><Link to="/about" className="text-slate-300 hover:text-white transition-colors">About Sushegaad Goa</Link></li>
               <li><Link to="/contact" className="text-slate-300 hover:text-white transition-colors">Contact Support</Link></li>
               <li><Link to="/events" className="text-slate-300 hover:text-white transition-colors">Upcoming Events Calendar</Link></li>
