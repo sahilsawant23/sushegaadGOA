@@ -5,6 +5,7 @@ import { goaBeaches } from './beachesData';
 export const welcomeMessage = "Welcome to Sushegaad Goa! I'm your travel support assistant. I can help you discover amazing tours, beautiful beaches, and plan your perfect Goa adventure. How can I assist you today?";
 
 export const quickReplies: QuickReply[] = [
+  { id: 'rentals', text: 'Self-Drive Rentals', action: 'show_rentals' },
   { id: 'tours', text: 'Find Tours', action: 'show_tours' },
   { id: 'beaches', text: 'Explore Beaches', action: 'show_beaches' },
   { id: 'nightlife', text: 'Nightlife Guide', action: 'show_nightlife' },
@@ -86,6 +87,11 @@ export const generateBotResponse = (userMessage: string, _context: string = ''):
     return chatbotResponses.greeting[Math.floor(Math.random() * chatbotResponses.greeting.length)];
   }
   
+  // Vehicle Rental inquiries
+  if (message.includes('rental') || message.includes('car') || message.includes('scooter') || message.includes('bike') || message.includes('thar') || message.includes('vehicle')) {
+    return "**Self-Drive Vehicle Rentals in Goa**\n\nExplore Goa at your own pace with our verified fleet:\n• **Scooters & Bikes**: Activa, Fascino, Royal Enfield (from ₹400/day)\n• **Cars & SUVs**: Thar 4x4, Swift, Baleno, Creta (from ₹1,200/day)\n• **Airport Delivery**: Direct pickup at Dabolim (GOI) or MOPA (GOX) airports\n\nVisit our Rentals page for instant booking and live availability!";
+  }
+
   // Tour inquiries
   if (message.includes('tour') || message.includes('package') || message.includes('trip')) {
     if (message.includes('beach')) return chatbotResponses.tours.beach;
