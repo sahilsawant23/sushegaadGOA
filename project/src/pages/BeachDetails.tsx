@@ -227,16 +227,18 @@ const BeachDetails: React.FC = () => {
                         <WaterSafetyWidget beachId={beach.id} beachName={beach.name} region={beach.region} />
                     </div>
 
-                    {/* Distance Info */}
-                    <div className="bg-blue-50 dark:bg-gray-700/50 p-6 rounded-2xl flex items-center justify-between border border-blue-100 dark:border-gray-600">
+                    {/* Distance & Rental Action Info */}
+                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-750 p-6 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 border border-blue-100 dark:border-gray-700">
                         <div>
                             <h3 className="text-base font-bold text-blue-950 dark:text-blue-300 mb-1">Distance from Panaji</h3>
-                            <p className="text-blue-700 dark:text-blue-200 text-sm font-semibold">{beach.distanceFromPanaji || 'Approx 20 km'}</p>
+                            <p className="text-blue-700 dark:text-blue-200 text-sm font-semibold">{beach.distanceFromPanaji || 'Approx 20 km'} • {beach.accessibility || 'Easy Access'}</p>
                         </div>
-                        <div className="text-right">
-                            <h3 className="text-base font-bold text-blue-950 dark:text-blue-300 mb-1">Accessibility</h3>
-                            <p className="text-blue-700 dark:text-blue-200 text-sm font-semibold">{beach.accessibility || 'Easy Access'}</p>
-                        </div>
+                        <button
+                            onClick={() => navigate('/rentals')}
+                            className="bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold px-5 py-2.5 rounded-xl shadow-md transition-all transform hover:scale-105"
+                        >
+                            Rent a Scooter / Car to Visit
+                        </button>
                     </div>
                 </motion.div>
             </div>
