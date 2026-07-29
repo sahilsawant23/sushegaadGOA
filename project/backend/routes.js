@@ -24,6 +24,21 @@ async function getConnection() {
   return await pool.getConnection();
 }
 
+// System Health & Telemetry Status Endpoint
+router.get('/health', async (req, res) => {
+  try {
+    res.json({
+      status: 'healthy',
+      service: 'Sushegaad GOA Backend API',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      n8n_automation: process.env.N8N_WEBHOOK_URL ? 'configured' : 'disabled'
+    });
+  } catch (err) {
+    res.status(500).json({ status: 'unhealthy', error: err.message });
+  }
+});
+
 // Register user
 router.post('/register', async (req, res) => {
   const { email, password, fullName } = req.body;
