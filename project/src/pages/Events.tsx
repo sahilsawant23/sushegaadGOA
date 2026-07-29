@@ -3,6 +3,59 @@ import { motion } from 'framer-motion';
 import { Calendar, MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
+const FALLBACK_EVENTS = [
+    {
+        id: '1',
+        title: 'Sunburn Goa EDM Festival',
+        category: 'Music',
+        price: '₹2,499 onwards',
+        date: '2026-12-28',
+        location: 'Vagator Beach, North Goa',
+        description: 'Experience Asia largest electronic dance music festival with top international DJs, massive stage designs, and sunset vibes.',
+        image_url: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&q=80'
+    },
+    {
+        id: '2',
+        title: 'Goa Carnival Parade 2026',
+        category: 'Cultural',
+        price: 'Free Entry',
+        date: '2026-02-14',
+        location: 'Panaji Promenade',
+        description: 'Vibrant float parade led by King Momo featuring traditional Konkani dance, colorful costumes, and street festivities.',
+        image_url: 'https://images.unsplash.com/photo-1533174072545-e8d4aa97edf9?w=800&q=80'
+    },
+    {
+        id: '3',
+        title: 'Shigmo Cultural Heritage Night',
+        category: 'Cultural',
+        price: 'Free Entry',
+        date: '2026-03-22',
+        location: 'Margao Municipal Park',
+        description: 'Traditional Goan spring festival celebrating local folk dances like Ghode Modni, Fugdi, and epic mythological tableaus.',
+        image_url: 'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=800&q=80'
+    },
+    {
+        id: '4',
+        title: 'Goa Food & Cashew Trail Festival',
+        category: 'Food',
+        price: '₹499',
+        date: '2026-04-18',
+        location: 'Fontainhas, Panaji',
+        description: 'Taste authentic Goan fish curry rice, xacuti, feni tasting workshops, and live acoustic music in Latin Quarter.',
+        image_url: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&q=80'
+    },
+    {
+        id: '5',
+        title: 'Anjuna Beach Full Moon Bash',
+        category: 'Nightlife',
+        price: '₹1,000',
+        date: '2026-11-15',
+        location: 'Anjuna Beach',
+        description: 'Iconic beachfront party with fire dancers, psychedelic trance beats, and open-air seaside dancing until dawn.',
+        image_url: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800&q=80'
+    }
+];
+
 const Events: React.FC = () => {
     const navigate = useNavigate();
     const [events, setEvents] = useState<any[]>([]);
@@ -13,11 +66,16 @@ const Events: React.FC = () => {
         fetch('http://localhost:5000/api/events?upcoming=true')
             .then(res => res.json())
             .then(data => {
-                setEvents(data);
+                if (Array.isArray(data) && data.length > 0) {
+                    setEvents(data);
+                } else {
+                    setEvents(FALLBACK_EVENTS);
+                }
                 setLoading(false);
             })
             .catch(err => {
-                console.error('Failed to load events', err);
+                console.error('Failed to load live events, using fallback data', err);
+                setEvents(FALLBACK_EVENTS);
                 setLoading(false);
             });
     }, []);
