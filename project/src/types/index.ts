@@ -70,3 +70,67 @@ export interface BlogPost {
   category: string;
   tags: string[];
 }
+
+export interface ArtisanProduct {
+  id: string;
+  title: string;
+  artisanName: string;
+  location: string;
+  price: number;
+  rating: number;
+  reviewCount: number;
+  category: 'Feni & Spirits' | 'Cashews & Spices' | 'Handicrafts' | 'Kunbi Textiles' | 'Sweets & Preserves';
+  ecoCertified: boolean;
+  stock: number;
+  image: string;
+  story: string;
+  originVillage: string;
+}
+
+export interface BundleItem {
+  id: string;
+  category: 'stay' | 'transport' | 'activity' | 'experience';
+  title: string;
+  subtitle: string;
+  pricePerDay: number;
+  image: string;
+  rating: number;
+  location: string;
+  features: string[];
+}
+
+export interface CulinaryExperience {
+  id: string;
+  title: string;
+  hostName: string;
+  location: string;
+  type: 'Home Dine' | 'Cooking Masterclass' | 'Spice Plantation Lunch';
+  pricePerPerson: number;
+  duration: string;
+  dietary: 'Fish Curry Special' | 'Traditional Veg & Goan Thali' | 'Multi-course Seafood';
+  rating: number;
+  reviewCount: number;
+  image: string;
+  description: string;
+  highlights: string[];
+}
+
+export interface KonkaniPhrase {
+  id: string;
+  english: string;
+  konkani: string;
+  phonetic: string;
+  category: 'Greetings' | 'Dining & Food' | 'Bargaining & Transport' | 'Directions' | 'Emergency';
+  audioText: string;
+}
+
+export interface VendorListing {
+  id: string;
+  title: string;
+  type: 'Beach Shack' | 'Scooter & Car Rental' | 'Water Sports Operator' | 'Artisan Workshop';
+  location: string;
+  activeBookings: number;
+  revenueThisMonth: number;
+  rating: number;
+  status: 'Active' | 'Pending Review' | 'Seasonal Pause';
+}

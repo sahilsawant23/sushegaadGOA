@@ -131,8 +131,135 @@ const AdminDashboard: React.FC = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [destinations, setDestinations] = useState<any[]>([]);
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'bookings' | 'rentals' | 'guides' | 'messages' | 'reviews' | 'events' | 'settings'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'bookings' | 'rentals' | 'guides' | 'vendors' | 'messages' | 'reviews' | 'events' | 'settings'>('overview');
   const [menuOpen, setMenuOpen] = useState(false);
+
+  const [vendorListings, setVendorListings] = useState<any[]>([]);
+  const [selectedVendorModal, setSelectedVendorModal] = useState<any | null>(null);
+
+  const [showAdminAddVendorModal, setShowAdminAddVendorModal] = useState(false);
+  const [adminVendorTitle, setAdminVendorTitle] = useState('');
+  const [adminVendorType, setAdminVendorType] = useState('Beach Shack');
+  const [adminVendorLocation, setAdminVendorLocation] = useState('');
+  const [adminVendorOwner, setAdminVendorOwner] = useState('');
+  const [adminVendorLicense, setAdminVendorLicense] = useState('');
+
+  const handleAdminAddVendor = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!adminVendorTitle || !adminVendorLocation) {
+      toast.error('Please fill title and location');
+      return;
+    }
+
+    const created = {
+      id: `v-${Date.now()}`,
+      title: adminVendorTitle,
+      type: adminVendorType,
+      location: adminVendorLocation,
+      ownerName: adminVendorOwner || 'Verified Goan Partner',
+      email: 'admin-added@goa.com',
+      phone: '+91 98221XXXXX',
+      licenseNumber: adminVendorLicense || 'GOA-TSM-2026-VERIFIED',
+      capacityOrInventory: '30 Units',
+      registeredAt: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+      status: 'Active'
+    };
+
+    const updated = [created, ...vendorListings];
+    setVendorListings(updated);
+    localStorage.setItem('goa_vendor_listings', JSON.stringify(updated));
+    window.dispatchEvent(new Event('goa_vendor_update'));
+
+    toast.success(`Published verified listing "${adminVendorTitle}"!`);
+    setAdminVendorTitle('');
+    setAdminVendorLocation('');
+    setAdminVendorOwner('');
+    setAdminVendorLicense('');
+    setShowAdminAddVendorModal(false);
+  };
+
+  useEffect(() => {
+    const fetchRealtimeListings = () => {
+      const savedListings = localStorage.getItem('goa_vendor_listings');
+      if (savedListings) {
+        try {
+          setVendorListings(JSON.parse(savedListings));
+        } catch (e) {}
+      } else {
+        const initial = [
+          {
+            id: 'v-101',
+            title: 'Curlies Beach Shack & Sunset Deck',
+            type: 'Beach Shack',
+            location: 'Anjuna Beach',
+            ownerName: 'Mario D\'Souza',
+            email: 'mario@curliesgoa.com',
+            phone: '+91 9822112233',
+            licenseNumber: 'GOA-TSM-2026-981',
+            capacityOrInventory: '40 Beach Tables & Sunbeds',
+            registeredAt: '12 Jul 2026',
+            status: 'Active'
+          },
+          {
+            id: 'v-102',
+            title: 'Calangute Extreme Jet Ski & Paragliding',
+            type: 'Water Sports Operator',
+            location: 'Calangute Beach',
+            ownerName: 'Rahul Naik',
+            email: 'rahul@watersportsgoa.com',
+            phone: '+91 9890445566',
+            licenseNumber: 'GOA-WS-2026-442',
+            capacityOrInventory: '12 Speedboats & Jetskis',
+            registeredAt: '24 Jul 2026',
+            status: 'Pending Review'
+          },
+          {
+            id: 'v-103',
+            title: 'Vinayak Family Goan Seafood Restaurant',
+            type: 'Restaurant & Dining',
+            location: 'Panaji, North Goa',
+            ownerName: 'Suresh Fernandes',
+            email: 'contact@vinayakgoa.com',
+            phone: '+91 9822557788',
+            licenseNumber: 'FSSAI-GOA-110298',
+            capacityOrInventory: '60 Seater Indoor & Garden',
+            registeredAt: '28 Jul 2026',
+            status: 'Pending Review'
+          }
+        ];
+        setVendorListings(initial);
+        localStorage.setItem('goa_vendor_listings', JSON.stringify(initial));
+      }
+    };
+
+    fetchRealtimeListings();
+
+    window.addEventListener('storage', fetchRealtimeListings);
+    window.addEventListener('goa_vendor_update', fetchRealtimeListings);
+    const interval = setInterval(fetchRealtimeListings, 2000);
+
+    return () => {
+      window.removeEventListener('storage', fetchRealtimeListings);
+      window.removeEventListener('goa_vendor_update', fetchRealtimeListings);
+      clearInterval(interval);
+    };
+  }, []);
+
+  const approveVendorListing = (id: string) => {
+    const updated = vendorListings.map((v) => v.id === id ? { ...v, status: 'Active' } : v);
+    setVendorListings(updated);
+    localStorage.setItem('goa_vendor_listings', JSON.stringify(updated));
+    window.dispatchEvent(new Event('goa_vendor_update'));
+    toast.success('Approved vendor listing! It is now live on the website.');
+  };
+
+  const rejectVendorListing = (id: string) => {
+    const updated = vendorListings.filter((v) => v.id !== id);
+    setVendorListings(updated);
+    localStorage.setItem('goa_vendor_listings', JSON.stringify(updated));
+    window.dispatchEvent(new Event('goa_vendor_update'));
+    toast.error('Vendor listing rejected.');
+  };
 
   const [showAddTour, setShowAddTour] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -337,6 +464,7 @@ const AdminDashboard: React.FC = () => {
     { id: 'bookings' as const, icon: Calendar, label: 'Bookings & Orders' },
     { id: 'rentals' as const, icon: Bike, label: 'Scooter & Car Rentals' },
     { id: 'guides' as const, icon: Award, label: 'Guides & Verification' },
+    { id: 'vendors' as const, icon: Shield, label: 'Shack & Vendor Approvals' },
     { id: 'messages' as const, icon: MessageSquare, label: 'Inbound Messages' },
     { id: 'reviews' as const, icon: Star, label: 'User Reviews' },
     { id: 'events' as const, icon: Sparkles, label: 'Manage Events' },
@@ -415,8 +543,15 @@ const AdminDashboard: React.FC = () => {
 
         <div className="p-4 border-t border-slate-200/50 dark:border-slate-800/50 space-y-2">
           <button
+            onClick={() => navigate('/vendor/portal')}
+            className="w-full flex items-center justify-center space-x-2 py-2.5 px-4 mb-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-bold text-xs hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-all border border-emerald-500/20"
+          >
+            <Shield size={15} className="text-emerald-500" />
+            <span>Vendor & Shack Portal</span>
+          </button>
+          <button
             onClick={() => navigate('/')}
-            className="w-full flex items-center justify-center space-x-2 py-2.5 px-4 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all active:scale-[0.98]"
+            className="w-full flex items-center justify-center space-x-2 py-2.5 px-4 rounded-xl bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 font-bold text-xs hover:bg-slate-200 dark:hover:bg-slate-800 transition-all border border-slate-200 dark:border-slate-700"
           >
             <MapPin size={15} className="text-indigo-500" />
             <span>Go to Live Website</span>
@@ -923,6 +1058,323 @@ const AdminDashboard: React.FC = () => {
                 transition={{ duration: 0.3 }}
               >
                 <GuidesTab guides={guides} bookings={bookings} setGuides={setGuides} token={localStorage.getItem('token')} />
+              </motion.div>
+            )}
+
+            {activeTab === 'vendors' && (
+              <motion.div
+                key="vendors"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.3 }}
+                className="space-y-6"
+              >
+                {/* Header */}
+                <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/50 dark:border-slate-800/85 p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div>
+                    <h2 className="text-xl font-black text-slate-900 dark:text-white flex items-center space-x-2">
+                      <Shield className="w-5 h-5 text-emerald-500" />
+                      <span>Registered Shacks, Restaurants & Vendor Verification Directory</span>
+                    </h2>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Complete administrative master control over registered Goan shacks, vehicle fleets, and water sports operators.
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      onClick={() => setShowAdminAddVendorModal(true)}
+                      className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-2xl transition flex items-center space-x-1.5 shadow"
+                    >
+                      <Plus size={14} />
+                      <span>+ Add Shack / Partner Listing</span>
+                    </button>
+                    <span className="text-xs font-bold px-3 py-2 bg-amber-50 dark:bg-amber-950 text-amber-600 rounded-2xl border border-amber-500/20">
+                      ⏳ {vendorListings.filter((l) => l.status === 'Pending Review').length} Pending Verifications
+                    </span>
+                  </div>
+                </div>
+
+                {/* Table View */}
+                <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/50 dark:border-slate-800/85 shadow-sm overflow-hidden">
+                  <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                    <h3 className="text-xs font-bold text-slate-850 dark:text-white uppercase tracking-wider">All Partner Business Accounts</h3>
+                    <span className="text-xs text-slate-400 font-semibold">{vendorListings.length} Registered Businesses</span>
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-slate-100 dark:divide-slate-800 text-left">
+                      <thead className="bg-slate-50 dark:bg-slate-950 text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+                        <tr>
+                          <th className="px-6 py-4">Shack / Business Name</th>
+                          <th className="px-6 py-4">Category</th>
+                          <th className="px-6 py-4">Owner & Contact</th>
+                          <th className="px-6 py-4">Location</th>
+                          <th className="px-6 py-4">License / FSSAI No.</th>
+                          <th className="px-6 py-4">Status Badge</th>
+                          <th className="px-6 py-4">Admin Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white dark:bg-slate-900 divide-y divide-slate-100 dark:divide-slate-800 text-xs font-semibold">
+                        {vendorListings.map((v) => (
+                          <tr key={v.id} className="hover:bg-slate-50 dark:hover:bg-slate-850/20 transition">
+                            <td className="px-6 py-4 font-black text-slate-900 dark:text-white">
+                              {v.title}
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className="px-2.5 py-0.5 rounded-lg bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-bold text-[10px] uppercase border border-emerald-500/20">
+                                {v.type}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 text-slate-800 dark:text-slate-200">
+                              <div>{v.ownerName || 'Goan Partner'}</div>
+                              <div className="text-[11px] text-slate-400 font-normal">{v.phone || '+91 98221XXXXX'} • {v.email || 'partner@goa.com'}</div>
+                            </td>
+                            <td className="px-6 py-4 text-slate-500 font-medium">
+                              <span className="flex items-center space-x-1">
+                                <MapPin className="w-3.5 h-3.5 text-slate-400" />
+                                <span>{v.location}</span>
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 font-mono text-xs font-bold text-indigo-600 dark:text-indigo-400">
+                              {v.licenseNumber || 'GOA-TSM-2026-REG'}
+                            </td>
+                            <td className="px-6 py-4">
+                              <span
+                                className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider ${
+                                  v.status === 'Active'
+                                    ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300'
+                                    : 'bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 border border-amber-500/30'
+                                }`}
+                              >
+                                {v.status === 'Pending Review' ? '⏳ Pending Approval' : '✅ Active Live'}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 space-x-2">
+                              <button
+                                onClick={() => setSelectedVendorModal(v)}
+                                className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-xl hover:bg-slate-200 transition text-[11px] font-bold"
+                              >
+                                Inspect All Details 📄
+                              </button>
+                              {v.status === 'Pending Review' ? (
+                                <button
+                                  onClick={() => approveVendorListing(v.id)}
+                                  className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition text-[11px] font-bold shadow"
+                                >
+                                  Approve & Publish
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => rejectVendorListing(v.id)}
+                                  className="px-3 py-1.5 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-xl transition text-[11px] font-bold"
+                                >
+                                  Delete
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Detailed Inspection Modal */}
+                {selectedVendorModal && (
+                  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                    <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full p-6 shadow-2xl relative border border-slate-200 dark:border-slate-800">
+                      <button
+                        onClick={() => setSelectedVendorModal(null)}
+                        className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-white font-bold"
+                      >
+                        ✕
+                      </button>
+
+                      <div className="flex items-center space-x-3 mb-4">
+                        <div className="p-3 bg-emerald-100 dark:bg-emerald-950 text-emerald-600 rounded-2xl">
+                          <Shield className="w-6 h-6" />
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+                            {selectedVendorModal.title}
+                          </h3>
+                          <span className="text-xs font-bold text-emerald-600">
+                            Category: {selectedVendorModal.type}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="space-y-3 text-xs bg-slate-50 dark:bg-slate-800/60 p-4 rounded-2xl border border-slate-200/60 dark:border-slate-700 mb-6">
+                        <div className="flex justify-between border-b pb-2 border-slate-200/50 dark:border-slate-700">
+                          <span className="text-slate-400">Owner Name:</span>
+                          <span className="font-bold text-slate-900 dark:text-white">{selectedVendorModal.ownerName || 'Goan Partner'}</span>
+                        </div>
+                        <div className="flex justify-between border-b pb-2 border-slate-200/50 dark:border-slate-700">
+                          <span className="text-slate-400">Contact Email:</span>
+                          <span className="font-bold text-indigo-600 dark:text-indigo-400">{selectedVendorModal.email || 'partner@shackgoa.com'}</span>
+                        </div>
+                        <div className="flex justify-between border-b pb-2 border-slate-200/50 dark:border-slate-700">
+                          <span className="text-slate-400">Phone / WhatsApp:</span>
+                          <span className="font-bold text-slate-900 dark:text-white">{selectedVendorModal.phone || '+91 98221XXXXX'}</span>
+                        </div>
+                        <div className="flex justify-between border-b pb-2 border-slate-200/50 dark:border-slate-700">
+                          <span className="text-slate-400">Location in Goa:</span>
+                          <span className="font-bold text-slate-900 dark:text-white">{selectedVendorModal.location}</span>
+                        </div>
+                        <div className="flex justify-between border-b pb-2 border-slate-200/50 dark:border-slate-700">
+                          <span className="text-slate-400">Tourism / FSSAI License:</span>
+                          <span className="font-mono font-bold text-emerald-600">{selectedVendorModal.licenseNumber || 'GOA-TSM-2026-981'}</span>
+                        </div>
+                        <div className="flex justify-between border-b pb-2 border-slate-200/50 dark:border-slate-700">
+                          <span className="text-slate-400">Capacity / Setup:</span>
+                          <span className="font-bold text-slate-900 dark:text-white">{selectedVendorModal.capacityOrInventory || '25 Units'}</span>
+                        </div>
+
+                        {/* Uploaded Documents Section */}
+                        <div className="border-t pt-3 border-slate-200/50 dark:border-slate-700">
+                          <span className="font-bold text-slate-800 dark:text-slate-200 block mb-2">Uploaded Verification Documents:</span>
+                          <div className="space-y-1.5 font-sans">
+                            <div className="flex items-center justify-between bg-white dark:bg-slate-900 p-2 rounded-xl border border-slate-200 dark:border-slate-700">
+                              <span className="text-slate-500">📄 Tourism / Shack License:</span>
+                              <span className="font-mono font-bold text-indigo-600 dark:text-indigo-400">
+                                {selectedVendorModal.documents?.shackLicenseDoc || 'Goa_Tourism_License_Verified.pdf'}
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between bg-white dark:bg-slate-900 p-2 rounded-xl border border-slate-200 dark:border-slate-700">
+                              <span className="text-slate-500">🍕 FSSAI Food Safety Cert:</span>
+                              <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                                {selectedVendorModal.documents?.fssaiCertDoc || 'FSSAI_Food_Registration.pdf'}
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between bg-white dark:bg-slate-900 p-2 rounded-xl border border-slate-200 dark:border-slate-700">
+                              <span className="text-slate-500">🆔 Owner Govt Aadhaar / ID:</span>
+                              <span className="font-mono font-bold text-purple-600 dark:text-purple-400">
+                                {selectedVendorModal.documents?.ownerIdDoc || 'Owner_Govt_Aadhaar_ID.pdf'}
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between bg-white dark:bg-slate-900 p-2 rounded-xl border border-slate-200 dark:border-slate-700">
+                              <span className="text-slate-500">📸 Front Shack / Menu Photo:</span>
+                              <span className="font-mono font-bold text-amber-600 dark:text-amber-400">
+                                {selectedVendorModal.documents?.frontPhotoDoc || 'Shack_Front_Entrance.jpg'}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex space-x-3">
+                        {selectedVendorModal.status === 'Pending Review' ? (
+                          <button
+                            onClick={() => {
+                              approveVendorListing(selectedVendorModal.id);
+                              setSelectedVendorModal(null);
+                            }}
+                            className="flex-1 bg-emerald-600 text-white font-bold py-3 rounded-2xl shadow hover:bg-emerald-700 transition"
+                          >
+                            Approve & Publish to Website ✅
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => setSelectedVendorModal(null)}
+                            className="flex-1 bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-white font-bold py-3 rounded-2xl"
+                          >
+                            Close Details
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Admin Add Shack / Listing Modal */}
+                {showAdminAddVendorModal && (
+                  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                    <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 shadow-2xl relative border border-slate-200 dark:border-slate-800">
+                      <button
+                        onClick={() => setShowAdminAddVendorModal(false)}
+                        className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-white font-bold"
+                      >
+                        ✕
+                      </button>
+
+                      <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-4 flex items-center space-x-2">
+                        <Plus className="w-5 h-5 text-emerald-500" />
+                        <span>Add Verified Shack / Partner Listing</span>
+                      </h3>
+
+                      <form onSubmit={handleAdminAddVendor} className="space-y-4 text-xs font-semibold">
+                        <div>
+                          <label className="block text-slate-700 dark:text-slate-300 mb-1">Shack / Business Title *</label>
+                          <input
+                            type="text"
+                            required
+                            placeholder="e.g. Souza Lobo Shack / Baga Watersports"
+                            value={adminVendorTitle}
+                            onChange={(e) => setAdminVendorTitle(e.target.value)}
+                            className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-xs"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-slate-700 dark:text-slate-300 mb-1">Category *</label>
+                          <select
+                            value={adminVendorType}
+                            onChange={(e) => setAdminVendorType(e.target.value)}
+                            className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-xs font-bold"
+                          >
+                            <option value="Beach Shack">Beach Shack</option>
+                            <option value="Restaurant & Dining">Restaurant & Dining</option>
+                            <option value="Scooter & Car Rental">Scooter & Car Rental</option>
+                            <option value="Water Sports Operator">Water Sports Operator</option>
+                            <option value="Artisan Workshop">Artisan Workshop</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-slate-700 dark:text-slate-300 mb-1">Location in Goa *</label>
+                          <input
+                            type="text"
+                            required
+                            placeholder="e.g. Calangute Beach / Panaji"
+                            value={adminVendorLocation}
+                            onChange={(e) => setAdminVendorLocation(e.target.value)}
+                            className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-xs"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-slate-700 dark:text-slate-300 mb-1">Owner Name</label>
+                          <input
+                            type="text"
+                            placeholder="e.g. Mario D'Souza"
+                            value={adminVendorOwner}
+                            onChange={(e) => setAdminVendorOwner(e.target.value)}
+                            className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-xs"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-slate-700 dark:text-slate-300 mb-1">Tourism / FSSAI License No.</label>
+                          <input
+                            type="text"
+                            placeholder="e.g. GOA-TSM-2026-881"
+                            value={adminVendorLicense}
+                            onChange={(e) => setAdminVendorLicense(e.target.value)}
+                            className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-xs"
+                          />
+                        </div>
+
+                        <button
+                          type="submit"
+                          className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-2xl shadow transition text-xs mt-2"
+                        >
+                          Publish Live to Sushegaad GOA ✅
+                        </button>
+                      </form>
+                    </div>
+                  </div>
+                )}
               </motion.div>
             )}
 
