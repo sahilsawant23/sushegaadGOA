@@ -3671,6 +3671,9 @@ router.put('/admin/rental-bookings/:id/status', async (req, res) => {
     conn.release();
   } catch (err) {}
 
+  res.json({ success: true, status });
+});
+
 // Memory fallback store for vendor listings & partners
 const vendorListingsStore = [
   {
