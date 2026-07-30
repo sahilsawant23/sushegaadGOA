@@ -338,13 +338,19 @@ const Register: React.FC = () => {
         </div>
 
         {/* Footer Links */}
-        <div className="pt-3 text-center">
+        <div className="pt-3 text-center space-y-1.5">
           <p className="text-xs text-gray-600 dark:text-gray-400">
             Already have an account?{' '}
             <Link to="/login" className="font-bold text-blue-600 dark:text-blue-400 hover:underline">
               Sign in here
             </Link>
           </p>
+          <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 rounded-2xl border border-emerald-500/20 text-xs">
+            <span className="text-gray-700 dark:text-gray-300 font-medium">Are you a Shack, Restaurant or Fleet Owner?</span>{' '}
+            <Link to="/vendor/register" className="font-bold text-emerald-600 dark:text-emerald-400 hover:underline block mt-0.5">
+              Sign Up as Business Partner 🏖️
+            </Link>
+          </div>
         </div>
       </div>
 

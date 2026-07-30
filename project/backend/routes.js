@@ -3671,7 +3671,109 @@ router.put('/admin/rental-bookings/:id/status', async (req, res) => {
     conn.release();
   } catch (err) {}
 
-  res.json({ success: true, status });
+// Memory fallback store for vendor listings & partners
+const vendorListingsStore = [
+  {
+    id: 'v-101',
+    title: 'Curlies Beach Shack & Sunset Deck',
+    type: 'Beach Shack',
+    location: 'Anjuna Beach',
+    ownerName: 'Mario D\'Souza',
+    email: 'mario@curliesgoa.com',
+    phone: '+91 9822112233',
+    licenseNumber: 'GOA-TSM-2026-981',
+    capacityOrInventory: '40 Beach Tables & Sunbeds',
+    registeredAt: '12 Jul 2026',
+    status: 'Active'
+  },
+  {
+    id: 'v-102',
+    title: 'Calangute Extreme Jet Ski & Paragliding',
+    type: 'Water Sports Operator',
+    location: 'Calangute Beach',
+    ownerName: 'Rahul Naik',
+    email: 'rahul@watersportsgoa.com',
+    phone: '+91 9890445566',
+    licenseNumber: 'GOA-WS-2026-442',
+    capacityOrInventory: '12 Speedboats & Jetskis',
+    registeredAt: '24 Jul 2026',
+    status: 'Pending Review'
+  }
+];
+
+// GET All Vendor Listings
+router.get('/vendors/listings', async (req, res) => {
+  try {
+    const conn = await pool.getConnection();
+    const [rows] = await conn.execute('SELECT * FROM vendor_listings ORDER BY created_at DESC');
+    conn.release();
+    if (rows && rows.length > 0) return res.json(rows);
+  } catch (err) {}
+  res.json(vendorListingsStore);
+});
+
+// POST Register Vendor / Submit Listing
+router.post('/vendors/listings', async (req, res) => {
+  const { title, type, location, ownerName, email, phone, licenseNumber, capacityOrInventory, documents } = req.body;
+  const newListing = {
+    id: `v-${Date.now()}`,
+    title: title || 'Goa Partner Shack',
+    type: type || 'Beach Shack',
+    location: location || 'North Goa',
+    ownerName: ownerName || 'Goan Partner',
+    email: email || 'partner@shackgoa.com',
+    phone: phone || '+91 98221XXXXX',
+    licenseNumber: licenseNumber || 'GOA-TSM-2026-PENDING',
+    capacityOrInventory: capacityOrInventory || '25 Units',
+    documents: documents || {},
+    registeredAt: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+    status: 'Pending Review',
+    activeBookings: 0,
+    revenueThisMonth: 0,
+    rating: 5.0
+  };
+  vendorListingsStore.unshift(newListing);
+
+  try {
+    const conn = await pool.getConnection();
+    await conn.execute(
+      'INSERT INTO vendor_listings (id, title, type, location, owner_name, email, phone, license_number, capacity_inventory, documents_json, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [newListing.id, newListing.title, newListing.type, newListing.location, newListing.ownerName, newListing.email, newListing.phone, newListing.licenseNumber, newListing.capacityOrInventory, JSON.stringify(newListing.documents), 'Pending Review']
+    );
+    conn.release();
+  } catch (err) {}
+
+  res.status(201).json({ success: true, listing: newListing });
+});
+
+// PUT Admin Approve Vendor Listing
+router.put('/admin/vendors/listings/:id/approve', async (req, res) => {
+  const { id } = req.params;
+  const item = vendorListingsStore.find(v => v.id === id);
+  if (item) item.status = 'Active';
+
+  try {
+    const conn = await pool.getConnection();
+    await conn.execute('UPDATE vendor_listings SET status = ? WHERE id = ?', ['Active', id]);
+    conn.release();
+  } catch (err) {}
+
+  res.json({ success: true, item });
+});
+
+// PUT Admin Reject Vendor Listing
+router.put('/admin/vendors/listings/:id/reject', async (req, res) => {
+  const { id } = req.params;
+  const index = vendorListingsStore.findIndex(v => v.id === id);
+  if (index !== -1) vendorListingsStore.splice(index, 1);
+
+  try {
+    const conn = await pool.getConnection();
+    await conn.execute('DELETE FROM vendor_listings WHERE id = ?', [id]);
+    conn.release();
+  } catch (err) {}
+
+  res.json({ success: true, message: 'Vendor listing rejected' });
 });
 
 module.exports = router;

@@ -9,6 +9,7 @@ import {
   ArrowLeft,
   Compass,
   UserCheck,
+  Store,
   ChevronLeft,
   ChevronRight,
   Pause,
@@ -20,7 +21,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 
-type RoleOption = 'traveler' | 'guide';
+type RoleOption = 'traveler' | 'guide' | 'vendor';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -67,7 +68,7 @@ const Login: React.FC = () => {
     }
   ];
 
-  // Role Configurations (Public options only)
+  // Role Configurations (Public options)
   const roleConfigs = {
     traveler: {
       label: "Traveler",
@@ -78,8 +79,14 @@ const Login: React.FC = () => {
     guide: {
       label: "Local Guide",
       icon: UserCheck,
-      subtitle: "Host tours & experiences",
+      subtitle: "Host tours & walks",
       email: "guide@example.com"
+    },
+    vendor: {
+      label: "Shack / Vendor",
+      icon: Store,
+      subtitle: "Shacks & rentals",
+      email: "vendor@shackgoa.com"
     }
   };
 
@@ -123,6 +130,15 @@ const Login: React.FC = () => {
         navigate('/admin/dashboard', { replace: true });
       } else if (profile && profile.role === 'guide') {
         navigate('/guide/dashboard', { replace: true });
+      } else if (selectedRole === 'vendor' || (profile && (profile.role === 'vendor' || profile.role === 'shack_owner'))) {
+        if (!localStorage.getItem('vendor_active_session')) {
+          localStorage.setItem('vendor_active_session', JSON.stringify({
+            role: 'vendor',
+            businessName: formData.email.split('@')[0] || 'Goa Shack Partner',
+            email: formData.email
+          }));
+        }
+        navigate('/vendor/portal', { replace: true });
       } else {
         navigate(returnTo, { replace: true });
       }
@@ -206,7 +222,7 @@ const Login: React.FC = () => {
                 </button>
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-3 gap-1.5">
                 {(Object.keys(roleConfigs) as RoleOption[]).map((role) => {
                   const Icon = roleConfigs[role].icon;
                   const isSelected = selectedRole === role;
@@ -383,6 +399,12 @@ const Login: React.FC = () => {
             Are you a local tour guide?{' '}
             <Link to="/guide/register" className="font-bold text-teal-600 dark:text-teal-400 hover:underline">
               Register as verified guide
+            </Link>
+          </p>
+          <p className="text-xs text-gray-600 dark:text-gray-400">
+            Are you a Shack or Restaurant Owner?{' '}
+            <Link to="/vendor/register" className="font-bold text-emerald-600 dark:text-emerald-400 hover:underline">
+              Partner with us
             </Link>
           </p>
         </div>

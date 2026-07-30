@@ -30,6 +30,14 @@ const Navbar: React.FC = () => {
     navigate('/');
   };
 
+  function setShowSOS(_arg0: boolean) {
+    throw new Error('Function not implemented.');
+  }
+
+  function setShowTelemetry(_arg0: boolean) {
+    throw new Error('Function not implemented.');
+  }
+
   return (
     <nav className="clean-header shadow-sm relative z-40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -104,6 +112,14 @@ const Navbar: React.FC = () => {
                         >
                           Profile
                         </Link>
+                        {(state.isAdmin || state.profile?.role === 'vendor' || localStorage.getItem('vendor_active_session')) && (
+                          <Link
+                            to="/vendor/portal"
+                            className="block px-4 py-2 text-sm text-emerald-600 dark:text-emerald-400 font-semibold hover:bg-gray-100 dark:hover:bg-gray-700"
+                          >
+                            Vendor Partner Portal
+                          </Link>
+                        )}
                         {!state.isAdmin && (
                           <Link
                             to="/bookings"

@@ -54,12 +54,19 @@ import RegionDetails from './pages/RegionDetails';
 import AITripPlanner from './pages/AITripPlanner';
 import Rentals from './pages/Rentals';
 import GroupPlanner from './pages/GroupPlanner';
+import Marketplace from './pages/Marketplace';
+import BundleBuilder from './pages/BundleBuilder';
+import VendorPortal from './pages/VendorPortal';
+import VendorRegister from './pages/VendorRegister';
+import CulinaryExperiences from './pages/CulinaryExperiences';
+import KonkaniPhrasebook from './pages/KonkaniPhrasebook';
+import EcoTourism from './pages/EcoTourism';
 
 const AppContent = () => {
   const location = useLocation();
 
   // Routes where Navbar and Footer should be hidden
-  const hideLayout = ['/admin/dashboard', '/guide/dashboard', '/dashboard'].some(path =>
+  const hideLayout = ['/admin/dashboard', '/guide/dashboard', '/dashboard', '/vendor/portal', '/vendor/register'].some(path =>
     location.pathname.startsWith(path)
   );
 
@@ -87,6 +94,13 @@ const AppContent = () => {
           <Route path="/ai-planner" element={<AITripPlanner />} />
           <Route path="/rentals" element={<Rentals />} />
           <Route path="/group-planner" element={<GroupPlanner />} />
+          <Route path="/marketplace" element={<Marketplace />} />
+          <Route path="/bundle-builder" element={<BundleBuilder />} />
+          <Route path="/vendor/portal" element={<VendorPortal />} />
+          <Route path="/vendor/register" element={<VendorRegister />} />
+          <Route path="/culinary-experiences" element={<CulinaryExperiences />} />
+          <Route path="/konkani-phrasebook" element={<KonkaniPhrasebook />} />
+          <Route path="/eco-tourism" element={<EcoTourism />} />
 
           <Route path="/events" element={<Events />} />
           <Route path="/events/:id" element={<EventDetails />} />
