@@ -11,6 +11,7 @@ import Footer from './components/common/Footer';
 import ChatbotWidget from './components/chatbot/ChatbotWidget';
 import CompareTray from './components/common/CompareTray';
 import ScrollToTopButton from './components/common/ScrollToTopButton';
+import OfflineNotifier from './components/common/OfflineNotifier';
 import Home from './pages/Home';
 import Tours from './pages/Tours';
 import TourDetails from './pages/TourDetails';
@@ -135,6 +136,7 @@ const AppContent = () => {
       {!hideLayout && <ChatbotWidget />}
       {!hideLayout && <CompareTray />}
       <ScrollToTopButton />
+      <OfflineNotifier />
     </div>
   );
 };
