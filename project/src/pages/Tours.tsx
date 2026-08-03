@@ -4,6 +4,7 @@ import { Star, Clock, Users, Filter, Search, SlidersHorizontal, Plus } from 'luc
 import { motion } from 'framer-motion';
 import { useCompare } from '../context/CompareContext';
 import SEO from '../components/common/SEO';
+import QuickFilterReset from '../components/common/QuickFilterReset';
 
 import { mockTours } from '../data/mockTours';
 
@@ -130,6 +131,16 @@ const Tours: React.FC = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-400 dark:placeholder-gray-500"
+              />
+            </div>
+
+            <div className="flex items-center">
+              <QuickFilterReset
+                activeCount={(searchQuery ? 1 : 0) + (selectedCategory !== 'all' ? 1 : 0)}
+                onReset={() => {
+                  setSearchQuery('');
+                  setSelectedCategory('all');
+                }}
               />
             </div>
 
