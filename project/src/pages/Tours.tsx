@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { Star, Clock, Users, Filter, Search, SlidersHorizontal, Plus } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useCompare } from '../context/CompareContext';
+import SEO from '../components/common/SEO';
 
 import { mockTours } from '../data/mockTours';
 
@@ -85,7 +86,10 @@ const Tours: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
-      {/* Header */}
+      <SEO 
+        title="Goa Tours & Experiences - Book Guided Adventures"
+        description="Browse authentic Goa tours, heritage walks, island cruises, water sports, and culinary experiences with local expert guides."
+      />
       {/* Header */}
       <div className="relative py-20 bg-gray-900 overflow-hidden">
         <div className="absolute inset-0 opacity-40">
