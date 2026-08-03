@@ -142,24 +142,27 @@ const AppContent = () => {
 };
 
 import { ToastProvider } from './context/ToastContext';
+import { CurrencyProvider } from './context/CurrencyContext';
 import ScrollToTop from './components/ScrollToTop';
 
 function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <ToastProvider>
-          <WishlistProvider>
-            <CompareProvider>
-              <ChatbotProvider>
-                <Router>
-                  <ScrollToTop />
-                  <AppContent />
-                </Router>
-              </ChatbotProvider>
-            </CompareProvider>
-          </WishlistProvider>
-        </ToastProvider>
+        <CurrencyProvider>
+          <ToastProvider>
+            <WishlistProvider>
+              <CompareProvider>
+                <ChatbotProvider>
+                  <Router>
+                    <ScrollToTop />
+                    <AppContent />
+                  </Router>
+                </ChatbotProvider>
+              </CompareProvider>
+            </WishlistProvider>
+          </ToastProvider>
+        </CurrencyProvider>
       </AuthProvider>
     </ThemeProvider>
   );

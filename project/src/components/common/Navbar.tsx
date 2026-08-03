@@ -4,6 +4,7 @@ import { Menu, X, User, Heart, MapPin } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import WeatherWidget from './WeatherWidget';
 import ThemeToggle from './ThemeToggle';
+import CurrencySelector from './CurrencySelector';
 
 const Navbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -73,6 +74,7 @@ const Navbar: React.FC = () => {
           {/* User Section & Toggles */}
           <div className="hidden md:flex items-center space-x-3">
             <div className="flex items-center space-x-2 border-r pr-3 border-gray-200 dark:border-gray-700">
+              <CurrencySelector />
               <ThemeToggle />
             </div>
 
