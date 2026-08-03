@@ -141,22 +141,25 @@ const AppContent = () => {
   );
 };
 
+import { ToastProvider } from './context/ToastContext';
 import ScrollToTop from './components/ScrollToTop';
 
 function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <WishlistProvider>
-          <CompareProvider>
-            <ChatbotProvider>
-              <Router>
-                <ScrollToTop />
-                <AppContent />
-              </Router>
-            </ChatbotProvider>
-          </CompareProvider>
-        </WishlistProvider>
+        <ToastProvider>
+          <WishlistProvider>
+            <CompareProvider>
+              <ChatbotProvider>
+                <Router>
+                  <ScrollToTop />
+                  <AppContent />
+                </Router>
+              </ChatbotProvider>
+            </CompareProvider>
+          </WishlistProvider>
+        </ToastProvider>
       </AuthProvider>
     </ThemeProvider>
   );
