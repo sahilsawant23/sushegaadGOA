@@ -21,39 +21,104 @@ const Bookings: React.FC = () => {
   const fetchBookings = async () => {
     try {
       const token = localStorage.getItem('token');
-      if (!token) {
-        setLoading(false);
-        return;
+      let tourBookings: any[] = [];
+      let rentalBookings: any[] = [];
+
+      // 1. Fetch Tour Bookings from API
+      if (token) {
+        try {
+          const res = await fetch(`${API_BASE_URL}/bookings`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            tourBookings = data.map((b: any) => ({
+              id: `BK${b.id}`,
+              dbId: b.id,
+              bookingType: 'tour',
+              tour: {
+                id: b.tour_id,
+                title: b.tour_title,
+                images: [b.image_url || 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?auto=format&fit=crop&q=80&w=1000'],
+                location: b.location || 'Goa',
+                duration: b.duration_hours ? `${b.duration_hours} hours` : '4 hours',
+                description: b.tour_description || 'Experience the beauty of Goa with this amazing tour.'
+              },
+              date: new Date(b.booking_date),
+              guests: b.guests || 1,
+              totalPrice: parseFloat(b.total_price),
+              status: (b.status || 'confirmed').toLowerCase(),
+              bookingDate: new Date(b.created_at),
+              paymentId: 'PAID',
+              guide: b.guide_id ? { name: b.guide_name, contact: b.guide_contact } : null
+            }));
+          }
+        } catch (e) {
+          console.error('Error fetching tour bookings:', e);
+        }
+
+        // 2. Fetch Rental Bookings from API
+        try {
+          const rentalRes = await fetch(`${API_BASE_URL}/rentals/my-bookings`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (rentalRes.ok) {
+            const rentalData = await rentalRes.json();
+            if (Array.isArray(rentalData)) {
+              rentalBookings = rentalData;
+            }
+          }
+        } catch (e) {
+          console.error('Error fetching rental bookings:', e);
+        }
       }
 
-      const res = await fetch(`${API_BASE_URL}/bookings`, {
-        headers: { Authorization: `Bearer ${token}` }
+      // 3. Merge with locally saved rental bookings
+      try {
+        const localRentals = JSON.parse(localStorage.getItem('user_rental_bookings') || '[]');
+        if (Array.isArray(localRentals)) {
+          localRentals.forEach((lr: any) => {
+            const exists = rentalBookings.some((rb: any) => rb.booking_id === lr.bookingId || rb.id === lr.bookingId);
+            if (!exists) {
+              rentalBookings.push(lr);
+            }
+          });
+        }
+      } catch (e) {}
+
+      // Format rental vehicle bookings
+      const formattedRentals = rentalBookings.map((r: any) => ({
+        id: r.booking_id || r.bookingId || `RENT-${r.id}`,
+        dbId: r.id,
+        isRental: true,
+        bookingType: 'rental',
+        vehicleCategory: r.category || 'Rental Vehicle',
+        tour: {
+          id: r.vehicle_name || r.vehicleName || 'Goa Rental',
+          title: `🛵 ${r.vehicle_name || r.vehicleName || 'Vehicle Rental'} (${(r.category || 'Rental').toUpperCase()})`,
+          images: ['https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&q=80&w=800'],
+          location: r.pickup_hub || r.pickupHub || 'Goa Hub',
+          duration: `${r.rental_days || r.rentalDays || 1} Days Rental`,
+          description: `Pickup: ${r.pickup_date || r.pickupDate || 'Scheduled'} | Dropoff: ${r.dropoff_date || r.dropoffDate || 'Scheduled'}`
+        },
+        date: r.pickup_date ? new Date(r.pickup_date) : (r.created_at ? new Date(r.created_at) : new Date()),
+        guests: r.rental_days || r.rentalDays || 1,
+        totalPrice: parseFloat(r.total_amount || r.totalAmount || 0),
+        status: (r.status || 'Confirmed').toLowerCase(),
+        bookingDate: r.created_at ? new Date(r.created_at) : new Date(),
+        paymentId: r.payment_id || r.paymentId || 'PAID',
+        pickupHub: r.pickup_hub || r.pickupHub,
+        drivingLicense: r.driving_license || r.drivingLicense
+      }));
+
+      // Combine tour and rental bookings sorted by creation date
+      const allBookings = [...tourBookings, ...formattedRentals].sort((a, b) => {
+        const timeA = a.bookingDate instanceof Date && !isNaN(a.bookingDate.getTime()) ? a.bookingDate.getTime() : 0;
+        const timeB = b.bookingDate instanceof Date && !isNaN(b.bookingDate.getTime()) ? b.bookingDate.getTime() : 0;
+        return timeB - timeA;
       });
 
-      if (res.ok) {
-        const data = await res.json();
-        // Map backend format to frontend expectation
-        const formatted = data.map((b: any) => ({
-          id: `BK${b.id}`, // Format ID
-          dbId: b.id, // Actual DB ID for API calls
-          tour: {
-            id: b.tour_id,
-            title: b.tour_title,
-            images: [b.image_url || 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?auto=format&fit=crop&q=80&w=1000'],
-            location: b.location || 'Goa',
-            duration: b.duration_hours ? `${b.duration_hours} hours` : '4 hours',
-            description: b.tour_description || 'Experience the beauty of Goa with this amazing tour.'
-          },
-          date: new Date(b.booking_date),
-          guests: b.guests || 1,
-          totalPrice: parseFloat(b.total_price),
-          status: b.status || 'confirmed',
-          bookingDate: new Date(b.created_at),
-          paymentId: 'PAID',
-          guide: b.guide_id ? { name: b.guide_name, contact: b.guide_contact } : null
-        }));
-        setBookings(formatted);
-      }
+      setBookings(allBookings);
     } catch (error) {
       console.error('Failed to fetch bookings', error);
       toast.error('Failed to load bookings');

@@ -3644,6 +3644,40 @@ router.post('/rentals/book', async (req, res) => {
   res.status(201).json({ success: true, booking: newRentalBooking });
 });
 
+// Get User Rental Bookings (Protected)
+router.get('/rentals/my-bookings', authenticateToken, async (req, res) => {
+  const userEmail = req.user?.email;
+  const userId = req.user?.userId;
+  let userRentals = [];
+
+  try {
+    const conn = await pool.getConnection();
+    const [rows] = await conn.execute(
+      'SELECT * FROM rental_bookings WHERE customer_email = ? ORDER BY created_at DESC',
+      [userEmail]
+    );
+    conn.release();
+    if (rows && rows.length > 0) userRentals = rows;
+  } catch (err) {
+    // DB error fallback
+  }
+
+  // Combine with memory store matches
+  const memoryMatches = rentalBookingsStore.filter(
+    b => (b.customer_email && userEmail && b.customer_email.toLowerCase() === userEmail.toLowerCase()) || (userId && b.user_id === userId)
+  );
+
+  const mergedMap = new Map();
+  [...userRentals, ...memoryMatches].forEach(item => {
+    const key = item.booking_id || item.id;
+    if (!mergedMap.has(key)) {
+      mergedMap.set(key, item);
+    }
+  });
+
+  res.json(Array.from(mergedMap.values()));
+});
+
 // Admin: GET All Rental Bookings
 router.get('/admin/rental-bookings', async (req, res) => {
   try {

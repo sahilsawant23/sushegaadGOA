@@ -171,11 +171,22 @@ export const Rentals: React.FC = () => {
         dropoffDate: `${dropoffDate} at ${dropoffTime}`
       });
 
+      // Save locally to localStorage for immediate My Bookings display
+      try {
+        const existing = JSON.parse(localStorage.getItem('user_rental_bookings') || '[]');
+        localStorage.setItem('user_rental_bookings', JSON.stringify([bookingData, ...existing]));
+      } catch (e) {}
+
       // Send rental booking to backend server for Admin Dashboard
       try {
+        const token = localStorage.getItem('token');
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
         await fetch(`${API_BASE_URL}/rentals/book`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers,
           body: JSON.stringify(bookingData)
         });
       } catch (err) {}
