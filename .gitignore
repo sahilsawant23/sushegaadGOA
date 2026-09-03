@@ -56,3 +56,7 @@ Thumbs.db
 project/backend/uploads/
 **/uploads/
 
+# Zip Archives
+*.zip
+
+

@@ -7,6 +7,7 @@ import SEO from '../components/common/SEO';
 import QuickFilterReset from '../components/common/QuickFilterReset';
 
 import { mockTours } from '../data/mockTours';
+import { API_BASE_URL } from '../config';
 
 const Tours: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -31,7 +32,7 @@ const Tours: React.FC = () => {
   }, [searchParams]);
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/tours')
+    fetch(`${API_BASE_URL}/tours`)
       .then(res => res.json())
       .then(data => {
         // Transform data to match component expectations

@@ -21,7 +21,7 @@ import {
 import { toast } from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+import { API_BASE_URL } from '../config';
 
 const GuideRegister = () => {
     const navigate = useNavigate();

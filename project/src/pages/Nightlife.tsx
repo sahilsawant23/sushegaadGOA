@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { MapPin, Clock, Filter, Search, Heart, Star, Loader2 } from 'lucide-react';
 import { useWishlist } from '../context/WishlistContext';
 import { goaNightlife } from '../data/nightlifeData';
+import { API_BASE_URL } from '../config';
 
 const Nightlife: React.FC = () => {
     const [venues, setVenues] = useState<any[]>([]);
@@ -17,7 +18,7 @@ const Nightlife: React.FC = () => {
 
     useEffect(() => {
         setLoading(true);
-        fetch('http://localhost:5000/api/realtime/places?category=clubs')
+        fetch(`${API_BASE_URL}/realtime/places?category=clubs`)
             .then(res => {
                 if (!res.ok) throw new Error('API failed');
                 return res.json();

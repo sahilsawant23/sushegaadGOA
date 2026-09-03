@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { API_BASE_URL } from '../config';
 import { 
   Bike, 
   MapPin, 
@@ -172,7 +173,7 @@ export const Rentals: React.FC = () => {
 
       // Send rental booking to backend server for Admin Dashboard
       try {
-        await fetch('http://localhost:5000/api/rentals/book', {
+        await fetch(`${API_BASE_URL}/rentals/book`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(bookingData)

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Calendar, MapPin, DollarSign, Loader, Compass, Route, RotateCcw } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { API_BASE_URL } from '../config';
 
 interface ItineraryItem {
   time: string;
@@ -91,7 +92,7 @@ const AITripPlanner: React.FC = () => {
       .join(', ');
 
     try {
-      const response = await fetch('http://localhost:5000/api/ai/plan-itinerary', {
+      const response = await fetch(`${API_BASE_URL}/ai/plan-itinerary`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

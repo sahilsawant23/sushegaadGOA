@@ -4,6 +4,7 @@ import { Star, Clock, Users, MapPin, Calendar, Heart, ArrowLeft, Check, X } from
 import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import ShareButton from '../components/common/ShareButton';
+import { API_BASE_URL } from '../config';
 
 const TourDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -19,7 +20,7 @@ const TourDetails: React.FC = () => {
 
   React.useEffect(() => {
     setLoading(true);
-    fetch(`http://localhost:5000/api/tours/${id}`)
+    fetch(`${API_BASE_URL}/tours/${id}`)
       .then(res => {
         if (!res.ok) throw new Error('Tour not found');
         return res.json();
@@ -30,7 +31,7 @@ const TourDetails: React.FC = () => {
         let avgRating = 0;
         let reviewCount = 0;
         try {
-          const reviewRes = await fetch(`http://localhost:5000/api/reviews/${id}`);
+          const reviewRes = await fetch(`${API_BASE_URL}/reviews/${id}`);
           if (reviewRes.ok) {
             const reviewData = await reviewRes.json();
             if (Array.isArray(reviewData)) {

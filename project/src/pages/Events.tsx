@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Calendar, MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from '../config';
 
 const FALLBACK_EVENTS = [
     {
@@ -63,7 +64,7 @@ const Events: React.FC = () => {
     const [filter, setFilter] = useState<'All' | 'Music' | 'Cultural' | 'Food' | 'Nightlife'>('All');
 
     useEffect(() => {
-        fetch('http://localhost:5000/api/events?upcoming=true')
+        fetch(`${API_BASE_URL}/events?upcoming=true`)
             .then(res => res.json())
             .then(data => {
                 if (Array.isArray(data) && data.length > 0) {

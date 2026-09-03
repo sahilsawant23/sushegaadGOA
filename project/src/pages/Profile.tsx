@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useWishlist } from '../context/WishlistContext';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from '../config';
 
 type Preferences = {
   tourTypes: string[];
@@ -66,7 +67,7 @@ const Profile: React.FC = () => {
     e.preventDefault();
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/profile', {
+      const res = await fetch(`${API_BASE_URL}/profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -115,7 +116,7 @@ const Profile: React.FC = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/profile/avatar', {
+      const res = await fetch(`${API_BASE_URL}/profile/avatar`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`

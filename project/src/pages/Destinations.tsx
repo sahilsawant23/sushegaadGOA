@@ -8,6 +8,7 @@ import { getTemplesByRegion } from '../data/templeData';
 import { useWishlist } from '../context/WishlistContext'; // Import Wishlist Context
 import TempleList from './TempleList';
 import ChurchList from './ChurchesList';
+import { API_BASE_URL } from '../config';
 import WaterfallList from './WaterfallList';
 import AuthenticList from './AuthenticList';
 import CultureList from './CultureList';
@@ -40,7 +41,7 @@ const Destinations: React.FC = () => {
 
   useEffect(() => {
     let isMounted = true;
-    fetch('http://localhost:5000/api/realtime/places')
+    fetch(`${API_BASE_URL}/realtime/places`)
       .then(res => res.ok ? res.json() : [])
       .then((data: any[]) => {
         if (isMounted && Array.isArray(data) && data.length > 0) {

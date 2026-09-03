@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Lock, MapPin, ArrowRight, Loader } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { API_BASE_URL } from '../config';
 
 interface Gem {
     id: number | string;
@@ -23,7 +24,7 @@ const HiddenGems: React.FC = () => {
     useEffect(() => {
         setLoading(true);
         // Encode "Hidden Gem" as the category
-        fetch('http://localhost:5000/api/destinations/category/Hidden%20Gem')
+        fetch(`${API_BASE_URL}/destinations/category/Hidden%20Gem`)
             .then(res => res.json())
             .then(data => {
                 const parsedData = data.map((item: any) => ({

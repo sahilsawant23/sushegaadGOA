@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Share2, Calendar, MapPin, ChevronLeft, ChevronRight, Tag, RefreshCw, ExternalLink } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { API_BASE_URL } from '../config';
 
 const EventDetails: React.FC = () => {
     const { id } = useParams();
@@ -13,7 +14,7 @@ const EventDetails: React.FC = () => {
     useEffect(() => {
         setCurrentImageIndex(0);
         setLoading(true);
-        fetch(`http://localhost:5000/api/events/${id}`)
+        fetch(`${API_BASE_URL}/events/${id}`)
             .then(res => {
                 if (!res.ok) throw new Error('Event not found');
                 return res.json();

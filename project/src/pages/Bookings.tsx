@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Calendar, MapPin, Users, Clock, Download, Phone, X, Info, AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
+import { API_BASE_URL } from '../config';
 
 const Bookings: React.FC = () => {
   const [activeTab, setActiveTab] = useState('upcoming');
@@ -25,7 +26,7 @@ const Bookings: React.FC = () => {
         return;
       }
 
-      const res = await fetch('http://localhost:5000/api/bookings', {
+      const res = await fetch(`${API_BASE_URL}/bookings`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -66,7 +67,7 @@ const Bookings: React.FC = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:5000/api/bookings/${bookingToCancel.dbId}/cancel`, {
+      const res = await fetch(`${API_BASE_URL}/bookings/${bookingToCancel.dbId}/cancel`, {
         method: 'PUT',
         headers: { Authorization: `Bearer ${token}` }
       });

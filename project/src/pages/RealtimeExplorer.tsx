@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, Clock, Search, Heart, Star, Navigation, Coffee, Bed, UtensilsCrossed, PartyPopper, Coins } from 'lucide-react';
 import { useWishlist } from '../context/WishlistContext';
+import { API_BASE_URL } from '../config';
 
 interface Place {
     id: string;
@@ -41,7 +42,7 @@ const RealtimeExplorer: React.FC = () => {
         setError(null);
         try {
             // Call the newly created backend endpoint
-            const url = `http://localhost:5000/api/realtime/places?category=${selectedCategory}&region=${selectedRegion}&search=${encodeURIComponent(searchQuery)}`;
+            const url = `${API_BASE_URL}/realtime/places?category=${selectedCategory}&region=${selectedRegion}&search=${encodeURIComponent(searchQuery)}`;
             const response = await fetch(url);
             if (!response.ok) {
                 throw new Error('Failed to fetch real-time places');

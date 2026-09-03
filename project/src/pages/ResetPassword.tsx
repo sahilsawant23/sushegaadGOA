@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { Lock, ArrowLeft, CheckCircle, Eye, EyeOff } from 'lucide-react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
+import { API_BASE_URL } from '../config';
 
 const ResetPassword: React.FC = () => {
     const [password, setPassword] = useState('');
@@ -38,7 +39,7 @@ const ResetPassword: React.FC = () => {
         }
 
         try {
-            const res = await fetch('http://localhost:5000/api/reset-password', {
+            const res = await fetch(`${API_BASE_URL}/reset-password`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ token, newPassword: password }),

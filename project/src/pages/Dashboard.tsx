@@ -19,7 +19,7 @@ interface RecentActivityItem {
   icon: React.FC<React.SVGProps<SVGSVGElement>>;
 }
 
-const API_BASE_URL = 'http://localhost:5000/api';
+import { API_BASE_URL } from '../config';
 
 const Dashboard: React.FC = () => {
   const { state, signOut, fetchUserProfile } = useAuth();

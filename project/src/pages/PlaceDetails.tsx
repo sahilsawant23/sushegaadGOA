@@ -1,6 +1,7 @@
 // Universal Place Details Component
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
+import { API_BASE_URL } from '../config';
 import { ArrowLeft, MapPin, Star, Clock, Info, Image as ImageIcon, Calendar } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { goaNightlife } from '../data/nightlifeData';
@@ -21,7 +22,7 @@ const PlaceDetails: React.FC = () => {
         setLoading(true);
 
         const fetchReviews = (placeId: string) => {
-            fetch(`http://localhost:5000/api/reviews/${placeId}`)
+            fetch(`${API_BASE_URL}/reviews/${placeId}`)
                 .then(res => res.json())
                 .then(resData => {
                     const dbRevs = resData.reviews || [];
@@ -51,7 +52,7 @@ const PlaceDetails: React.FC = () => {
         };
 
         if (id && (id.startsWith('osm-') || id.startsWith('premium-'))) {
-            fetch(`http://localhost:5000/api/realtime/places/${id}`)
+            fetch(`${API_BASE_URL}/realtime/places/${id}`)
                 .then(res => {
                     if (!res.ok) throw new Error('Not found');
                     return res.json();
@@ -162,7 +163,7 @@ const PlaceDetails: React.FC = () => {
         }
 
         // If not found statically, try API
-        fetch(`http://localhost:5000/api/destinations/${id}`)
+        fetch(`${API_BASE_URL}/destinations/${id}`)
             .then(res => {
                 if (!res.ok) throw new Error('Not found');
                 return res.json();

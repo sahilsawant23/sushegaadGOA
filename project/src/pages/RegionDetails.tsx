@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { MapPin, ArrowRight } from 'lucide-react';
+import { API_BASE_URL } from '../config';
 
 interface Destination {
     id: number;
@@ -25,7 +26,7 @@ const RegionDetails: React.FC = () => {
     useEffect(() => {
         setLoading(true);
         // Fetch all destinations and filter by region
-        fetch('http://localhost:5000/api/destinations')
+        fetch(`${API_BASE_URL}/destinations`)
             .then(res => {
                 if (!res.ok) throw new Error('Network response was not ok');
                 return res.json();

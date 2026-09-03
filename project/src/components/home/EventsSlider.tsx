@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Calendar, MapPin, ExternalLink } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { API_BASE_URL } from '../../config';
 
 interface Event {
   id: number;
@@ -21,7 +22,7 @@ const EventsSlider: React.FC = () => {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/events/live');
+        const response = await fetch(`${API_BASE_URL}/events/live`);
         const data = await response.json();
         if (Array.isArray(data)) {
           setEvents(data);

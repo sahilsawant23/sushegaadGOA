@@ -108,7 +108,7 @@ interface Event {
   image_url: string;
 }
 
-const API_BASE_URL = 'http://localhost:5000/api';
+import { API_BASE_URL, getImageUrl } from '../config';
 
 const AdminDashboard: React.FC = () => {
   const { state, signOut } = useAuth();
@@ -1898,7 +1898,7 @@ const GuidesTab: React.FC<{ guides: any[], bookings: any[], setGuides: any, toke
                   <div className="grid grid-cols-3 sm:grid-cols-4 gap-4">
                     {portfolio.map((item: any) => (
                       <div key={item.id} className="aspect-square bg-slate-50 dark:bg-slate-900 border rounded-2xl overflow-hidden shadow-inner">
-                        <img src={item.image_url.startsWith('http') ? item.image_url : `http://localhost:5000${item.image_url}`} alt="Portfolio" className="w-full h-full object-cover" />
+                        <img src={getImageUrl(item.image_url)} alt="Portfolio" className="w-full h-full object-cover" />
                       </div>
                     ))}
                   </div>

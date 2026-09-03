@@ -3,6 +3,7 @@ import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { Calendar, Users, CreditCard, Lock, ArrowLeft } from 'lucide-react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
+import { API_BASE_URL } from '../config';
 
 const Booking: React.FC = () => {
   const { tourId: id } = useParams<{ tourId: string }>();
@@ -53,7 +54,7 @@ const Booking: React.FC = () => {
     setLoading(true);
 
     if (id.startsWith('osm-')) {
-      fetch(`http://localhost:5000/api/realtime/places/${id}`)
+      fetch(`${API_BASE_URL}/realtime/places/${id}`)
         .then(res => {
           if (!res.ok) throw new Error('Place not found');
           return res.json();
@@ -79,7 +80,7 @@ const Booking: React.FC = () => {
       return;
     }
 
-    fetch(`http://localhost:5000/api/tours/${id}`)
+    fetch(`${API_BASE_URL}/tours/${id}`)
       .then(res => {
         if (!res.ok) throw new Error('Tour not found');
         return res.json();
@@ -188,7 +189,7 @@ const Booking: React.FC = () => {
         return;
       }
 
-      const response = await fetch('http://localhost:5000/api/bookings', {
+      const response = await fetch(`${API_BASE_URL}/bookings`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -216,7 +217,7 @@ const Booking: React.FC = () => {
           order_id: data.razorpayOrderId,
           handler: async function (paymentRes: any) {
             try {
-              const verifyRes = await fetch('http://localhost:5000/api/payments/verify', {
+              const verifyRes = await fetch(`${API_BASE_URL}/payments/verify`, {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',

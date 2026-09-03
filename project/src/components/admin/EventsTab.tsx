@@ -17,7 +17,7 @@ interface Event {
     image_url: string;
 }
 
-const API_BASE_URL = 'http://localhost:5000/api';
+import { API_BASE_URL } from '../../config';
 
 export const EventsTab: React.FC<{ events: Event[], onUpdate: () => void, token: string | null }> = ({ events, onUpdate, token }) => {
     const [showAdd, setShowAdd] = useState(false);

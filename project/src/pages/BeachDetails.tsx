@@ -5,6 +5,7 @@ import { MapPin, ArrowLeft, Check } from 'lucide-react';
 import { goaBeaches } from '../data/beachesData';
 import ImageSlider from '../components/common/ImageSlider';
 import WaterSafetyWidget from '../components/common/WaterSafetyWidget';
+import { API_BASE_URL } from '../config';
 
 const BeachDetails: React.FC = () => {
     const { id } = useParams();
@@ -54,7 +55,7 @@ const BeachDetails: React.FC = () => {
 
       if (id) {
         // Fetch real-time place data from backend
-        fetch(`http://localhost:5000/api/realtime/places/${id}`)
+        fetch(`${API_BASE_URL}/realtime/places/${id}`)
           .then(res => res.ok ? res.json() : null)
           .then(data => {
             if (isMounted && data) {

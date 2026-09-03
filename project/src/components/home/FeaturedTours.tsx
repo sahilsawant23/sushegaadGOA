@@ -2,11 +2,12 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Star, Clock, Users, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { API_BASE_URL } from '../../config';
 const FeaturedTours: React.FC = () => {
   const [featuredTours, setFeaturedTours] = React.useState<any[]>([]);
 
   React.useEffect(() => {
-    fetch('http://localhost:5000/api/tours')
+    fetch(`${API_BASE_URL}/tours`)
       .then(res => res.json())
       .then(data => {
         // Take first 3 tours

@@ -1,4 +1,5 @@
 const mysql = require('mysql2/promise');
+
 const dotenv = require('dotenv');
 
 // Ensure env vars are loaded
@@ -11,12 +12,14 @@ const dbConfig = {
     user: process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD || '',
     database: process.env.DB_NAME || 'goa_db',
+    port: parseInt(process.env.DB_PORT || '3306', 10),
+    ssl: process.env.DB_SSL === 'true'
+        ? { rejectUnauthorized: false }
+        : undefined,
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0
 };
-
-console.log('DB Config Password:', JSON.stringify(dbConfig.password));
 
 const pool = mysql.createPool(dbConfig);
 
@@ -28,8 +31,12 @@ pool.getConnection()
     })
     .catch(err => {
         console.error('Database pool connection failed:', err.message);
+
         if (err.code === 'ECONNREFUSED') {
-            console.error('Hint: Make sure your MySQL database server is running on ' + dbConfig.host + ':' + (dbConfig.port || 3306));
+            console.error(
+                'Hint: Make sure your MySQL database server is running on ' +
+                dbConfig.host + ':' + (dbConfig.port || 3306)
+            );
         }
     });
 

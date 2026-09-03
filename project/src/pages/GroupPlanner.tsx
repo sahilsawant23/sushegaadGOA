@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../config';
 import { 
   Users, 
   Share2, 
@@ -100,7 +101,7 @@ export const GroupPlanner: React.FC = () => {
 
     const fetchRealtimeTripData = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/group/${tripCode}`);
+        const res = await fetch(`${API_BASE_URL}/group/${tripCode}`);
         if (!res.ok) return;
         const data = await res.json();
         if (isMounted && data) {
@@ -142,7 +143,7 @@ export const GroupPlanner: React.FC = () => {
   const handleCreateNewTrip = async () => {
     const fallbackCode = 'GOA-GROUP-' + Math.floor(1000 + Math.random() * 9000);
     try {
-      const res = await fetch('http://localhost:5000/api/group/create', {
+      const res = await fetch(`${API_BASE_URL}/group/create`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: 'Goa Squad Trip 🌴', leaderName: 'Sahil (You)' })
@@ -180,7 +181,7 @@ export const GroupPlanner: React.FC = () => {
     toast.success(`Added ${name} to squad!`);
 
     try {
-      const res = await fetch(`http://localhost:5000/api/group/${tripCode}/join`, {
+      const res = await fetch(`${API_BASE_URL}/group/${tripCode}/join`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name })
@@ -195,7 +196,7 @@ export const GroupPlanner: React.FC = () => {
   // Real-time Upvote / Downvote Toggle
   const handleVote = async (pollId: string, type: 'up' | 'down') => {
     try {
-      const res = await fetch(`http://localhost:5000/api/group/${tripCode}/vote`, {
+      const res = await fetch(`${API_BASE_URL}/group/${tripCode}/vote`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ pollId, userId: currentUserId, voteType: type })
@@ -236,7 +237,7 @@ export const GroupPlanner: React.FC = () => {
     }
 
     try {
-      const res = await fetch(`http://localhost:5000/api/group/${tripCode}/confirm-activity`, {
+      const res = await fetch(`${API_BASE_URL}/group/${tripCode}/confirm-activity`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ pollId })
@@ -275,7 +276,7 @@ export const GroupPlanner: React.FC = () => {
     toast.success(`Proposed "${newTitle}" for squad voting! Click "+ Add to Itinerary" when ready.`);
 
     try {
-      const res = await fetch(`http://localhost:5000/api/group/${tripCode}/propose`, {
+      const res = await fetch(`${API_BASE_URL}/group/${tripCode}/propose`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -301,7 +302,7 @@ export const GroupPlanner: React.FC = () => {
     if (!expenseDesc || !expenseAmount) return;
 
     try {
-      const res = await fetch(`http://localhost:5000/api/group/${tripCode}/expense`, {
+      const res = await fetch(`${API_BASE_URL}/group/${tripCode}/expense`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -335,7 +336,7 @@ export const GroupPlanner: React.FC = () => {
   // Checklist toggle & add
   const toggleChecklist = async (id: string) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/group/${tripCode}/checklist`, {
+      const res = await fetch(`${API_BASE_URL}/group/${tripCode}/checklist`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'toggle', itemId: id })
@@ -352,7 +353,7 @@ export const GroupPlanner: React.FC = () => {
     if (!newCheckItem) return;
 
     try {
-      const res = await fetch(`http://localhost:5000/api/group/${tripCode}/checklist`, {
+      const res = await fetch(`${API_BASE_URL}/group/${tripCode}/checklist`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'add', text: newCheckItem, assignedTo: 'Sahil (You)' })
