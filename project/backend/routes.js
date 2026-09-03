@@ -83,7 +83,7 @@ router.post('/register', async (req, res) => {
     const passwordHash = await bcrypt.hash(password, 10);
     // Default role is 'user'. Admin must be set manually in DB for now.
     await conn.execute(
-      'INSERT INTO users (full_name, email, password_hash, role, created_at) VALUES (?, ?, ?, "user", NOW())',
+      'INSERT INTO users (full_name, email, password_hash, role, created_at) VALUES (?, ?, ?, \'user\', NOW())',
       [fullName, email, passwordHash]
     );
     conn.release();
