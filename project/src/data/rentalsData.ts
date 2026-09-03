@@ -1,4 +1,5 @@
 export interface RentalVehicle {
+  type: string;
   id: string;
   name: string;
   category: 'scooter' | 'cruiser' | 'sports' | 'electric' | 'jeep';
@@ -161,7 +162,8 @@ export const RENTAL_VEHICLES: RentalVehicle[] = [
     reviewCount: 342,
     features: ['Automatic CVT', 'Underseat Storage', 'Combi Braking System', 'Tubeless Tyres', '1 Free Helmet'],
     popularFor: 'Beach hopping, narrow Goan lanes & market rides',
-    description: 'The undisputed king of Goa scooter rentals. Lightweight, smooth, extremely reliable, and perfect for exploring North & South Goa easily.'
+    description: 'The undisputed king of Goa scooter rentals. Lightweight, smooth, extremely reliable, and perfect for exploring North & South Goa easily.',
+    type: ""
   },
   {
     id: 'yamaha-fascino-125',
@@ -182,7 +184,8 @@ export const RENTAL_VEHICLES: RentalVehicle[] = [
     reviewCount: 488,
     features: ['Smart Motor Generator', 'Super Lightweight (99 kg)', '21L Underseat Boot', 'Quiet Engine Start', '1 Free Helmet'],
     popularFor: 'Cruising coastal cliff roads, easy parking at beach shacks, high fuel economy',
-    description: 'Goa’s most beloved scooter choice for tourists! Ultra-lightweight (99 kg) retro design with hybrid power assist, making it effortless to steer through crowded beach lanes and village corners.'
+    description: 'Goa’s most beloved scooter choice for tourists! Ultra-lightweight (99 kg) retro design with hybrid power assist, making it effortless to steer through crowded beach lanes and village corners.',
+    type: ""
   },
   {
     id: 'vespa-urban-125',
@@ -203,7 +206,8 @@ export const RENTAL_VEHICLES: RentalVehicle[] = [
     reviewCount: 189,
     features: ['Retro Aesthetic', 'Front Disc Brake', 'USB Charging Port', 'Metallic Finish', '1 Premium Helmet'],
     popularFor: 'Scenic coastal photoshoots, Latin Quarter (Fontainhas) aesthetic rides',
-    description: 'Ride through Fontainhas and coastal palm avenues in timeless Italian style. Features premium chrome accents and comfortable twin seating.'
+    description: 'Ride through Fontainhas and coastal palm avenues in timeless Italian style. Features premium chrome accents and comfortable twin seating.',
+    type: ""
   },
   {
     id: 'royal-enfield-classic-350',
@@ -224,7 +228,8 @@ export const RENTAL_VEHICLES: RentalVehicle[] = [
     reviewCount: 412,
     features: ['Signature Thump', 'Dual-Channel ABS', 'Teardrop Tank', 'Upright Touring Ergonomics', '2 Helmets'],
     popularFor: 'Long highway cruises between North & South Goa, Dudhsagar trips',
-    description: 'Experience the iconic thumping rumble along Goa’s coastal highways and Western Ghats twisties. Smooth J-series engine with superb road grip.'
+    description: 'Experience the iconic thumping rumble along Goa’s coastal highways and Western Ghats twisties. Smooth J-series engine with superb road grip.',
+    type: ""
   },
   {
     id: 'ather-450x-ev',
@@ -245,7 +250,8 @@ export const RENTAL_VEHICLES: RentalVehicle[] = [
     reviewCount: 118,
     features: ['Touchscreen Maps Navigation', 'Warp Speed Mode', 'Free Fast Charging at Ather Grids', 'Zero Emissions'],
     popularFor: 'Eco-conscious travelers, quiet eco-zone explorations, Panjim city rides',
-    description: 'Silent, futuristic, and fast. Includes free unlimited charging across 30+ Ather Grid charging points across North & South Goa.'
+    description: 'Silent, futuristic, and fast. Includes free unlimited charging across 30+ Ather Grid charging points across North & South Goa.',
+    type: ""
   },
   {
     id: 'royal-enfield-hunter-350',
@@ -266,7 +272,8 @@ export const RENTAL_VEHICLES: RentalVehicle[] = [
     reviewCount: 156,
     features: ['Lightweight Chassis', 'Agile City Handling', 'Dual Channel ABS', 'Digital-Analog Meter'],
     popularFor: 'Nimble cafe hopping, sunset chasing, agile roadster experience',
-    description: 'Sleeker and lighter than the Classic. Designed for effortless maneuverability through tight beach village streets and hilltop lookout points.'
+    description: 'Sleeker and lighter than the Classic. Designed for effortless maneuverability through tight beach village streets and hilltop lookout points.',
+    type: ""
   },
   {
     id: 'maruti-suzuki-baleno',
@@ -287,7 +294,8 @@ export const RENTAL_VEHICLES: RentalVehicle[] = [
     reviewCount: 312,
     features: ['AGS Automatic Transmission', 'Chilled Climate Control AC', '360 Camera & Touchscreen Infotainment', 'Spacious 318L Boot for Luggage'],
     popularFor: 'Family beach holidays, luggage transport from airport, rain/sun AC comfort',
-    description: 'Goa’s favorite self-drive hatchback car for families and friend groups! Smooth automatic gearbox, ice-cold AC, and ample luggage space for airport transfers.'
+    description: 'Goa’s favorite self-drive hatchback car for families and friend groups! Smooth automatic gearbox, ice-cold AC, and ample luggage space for airport transfers.',
+    type: ""
   },
   {
     id: 'maruti-suzuki-ertiga',
@@ -308,7 +316,8 @@ export const RENTAL_VEHICLES: RentalVehicle[] = [
     reviewCount: 420,
     features: ['7 Seater Capacity', 'Dual AC Vents for All 3 Rows', 'Reclining Rear Seats', 'Foldable Seats for Airport Suitcases'],
     popularFor: 'Large group vacations, family airport transfers, 7-person sightseeing trips',
-    description: 'The premier 7-seater MPV choice for big families and friend groups visiting Goa! Exceptional comfort with 3-row AC vents, flexible luggage boot, and smooth automatic transmission.'
+    description: 'The premier 7-seater MPV choice for big families and friend groups visiting Goa! Exceptional comfort with 3-row AC vents, flexible luggage boot, and smooth automatic transmission.',
+    type: ""
   },
   {
     id: 'mahindra-thar-4x4',
@@ -329,7 +338,8 @@ export const RENTAL_VEHICLES: RentalVehicle[] = [
     reviewCount: 204,
     features: ['Convertible Soft Top', '4x4 All-Terrain', 'Bluetooth Infotainment', 'High Ground Clearance'],
     popularFor: 'Group road trips, open-top sunset drives, South Goa jungle safaris',
-    description: 'Feel the tropical Goan breeze with the top down. Yellow-plate commercial tourist registration ready for hassle-free driving across the state.'
+    description: 'Feel the tropical Goan breeze with the top down. Yellow-plate commercial tourist registration ready for hassle-free driving across the state.',
+    type: ""
   }
 ];
 
