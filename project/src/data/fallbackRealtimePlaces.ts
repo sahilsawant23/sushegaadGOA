@@ -87,6 +87,51 @@ export const fallbackRealtimePlaces: FallbackPlace[] = [
         latitude: 15.4590,
         longitude: 73.8565
     },
+    {
+        id: 'premium-casino-5',
+        name: 'Deltin Jaqk',
+        type: 'Casino',
+        location: 'Fisheries Jetty, Dayanand Bandodkar Marg, Panaji',
+        region: 'North Goa',
+        description: 'A highly popular floating casino offering a premium gaming experience, delicious buffet dinners, and complimentary drinks for players.',
+        priceRange: 'Luxury',
+        openingHours: 'Open 24 Hours (24/7)',
+        image: 'https://images.unsplash.com/photo-1606167668584-78701c57f13d?w=800',
+        rating: 4.5,
+        reviewCount: 1540,
+        latitude: 15.5030,
+        longitude: 73.8270
+    },
+    {
+        id: 'premium-casino-6',
+        name: 'Casino Palms',
+        type: 'Casino',
+        location: 'La Calypso Hotel, Baga Beach, Goa',
+        region: 'North Goa',
+        description: 'A vibrant land-based casino on the busy Baga stretch, featuring a relaxed gaming environment with slots, roulette, and blackjack for beachgoers.',
+        priceRange: 'Mid-range',
+        openingHours: 'Open 24 Hours (24/7)',
+        image: 'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=800',
+        rating: 4.2,
+        reviewCount: 650,
+        latitude: 15.5552,
+        longitude: 73.7517
+    },
+    {
+        id: 'premium-casino-7',
+        name: 'Deltin Zuri Casino',
+        type: 'Casino',
+        location: 'The Zuri White Sands Resort, Varca, South Goa',
+        region: 'South Goa',
+        description: 'A premium, classy casino located in South Goa within the Zuri White Sands Resort, offering a peaceful and upscale gaming environment for guests.',
+        priceRange: 'Luxury',
+        openingHours: 'Open 24 Hours (24/7)',
+        image: 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=800',
+        rating: 4.5,
+        reviewCount: 420,
+        latitude: 15.2155,
+        longitude: 73.9295
+    },
 
     // --- HOTELS & RESORTS ---
     {
@@ -124,6 +169,36 @@ export const fallbackRealtimePlaces: FallbackPlace[] = [
     },
     {
         id: 'hotel-3',
+        name: 'W Goa Resort',
+        type: 'Resort',
+        location: 'Vagator Beach, Bardez, North Goa',
+        region: 'North Goa',
+        description: 'Trendy luxury lifestyle resort situated on Vagator beach, featuring Rock Pool bar, chic decor, world-class dining, and sunset DJ sessions.',
+        priceRange: 'Luxury',
+        openingHours: 'Open 24 Hours (24/7)',
+        image: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800',
+        rating: 4.8,
+        reviewCount: 1120,
+        latitude: 15.6010,
+        longitude: 73.7340
+    },
+    {
+        id: 'hotel-4',
+        name: 'Grand Hyatt Goa',
+        type: 'Hotel',
+        location: 'Bambolim Bay, North Goa',
+        region: 'North Goa',
+        description: 'Sprawling 5-star palace hotel overlooking Bambolim Bay, featuring indoor/outdoor pools, Shamana Spa, and land-based casino.',
+        priceRange: 'Luxury',
+        openingHours: 'Open 24 Hours (24/7)',
+        image: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=800',
+        rating: 4.8,
+        reviewCount: 1650,
+        latitude: 15.4590,
+        longitude: 73.8565
+    },
+    {
+        id: 'hotel-5',
         name: 'The Hosteller Anjuna',
         type: 'Hostel',
         location: 'Anjuna Beach Road, North Goa',
@@ -136,6 +211,36 @@ export const fallbackRealtimePlaces: FallbackPlace[] = [
         reviewCount: 520,
         latitude: 15.5830,
         longitude: 73.7430
+    },
+    {
+        id: 'hotel-6',
+        name: 'Heritage Village Resort & Spa',
+        type: 'Resort',
+        location: 'Arossim Beach, Cansaulim, South Goa',
+        region: 'South Goa',
+        description: 'Colonial Portuguese architecture meets beach resort luxury in South Goa, featuring spa treatments and soothing seaside ambiance.',
+        priceRange: 'Mid-range',
+        openingHours: 'Open 24 Hours (24/7)',
+        image: 'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=800',
+        rating: 4.6,
+        reviewCount: 610,
+        latitude: 15.3210,
+        longitude: 73.9010
+    },
+    {
+        id: 'hotel-7',
+        name: 'Alila Diwa South Goa',
+        type: 'Resort',
+        location: 'Majorda Beach, Salcete, South Goa',
+        region: 'South Goa',
+        description: 'Tranquil luxury resort surrounded by lush paddy fields and close to Majorda beach, with an infinity pool overlooking nature.',
+        priceRange: 'Luxury',
+        openingHours: 'Open 24 Hours (24/7)',
+        image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800',
+        rating: 4.8,
+        reviewCount: 940,
+        latitude: 15.3100,
+        longitude: 73.9150
     },
 
     // --- CLUBS & BEACH SHACKS ---
@@ -187,6 +292,66 @@ export const fallbackRealtimePlaces: FallbackPlace[] = [
         latitude: 15.5680,
         longitude: 73.7620
     },
+    {
+        id: 'club-4',
+        name: 'LPK Waterfront (Love Passion Karma)',
+        type: 'Nightclub',
+        location: 'Nerul Riverbanks, Candolim, North Goa',
+        region: 'North Goa',
+        description: 'Unique riverside nightclub set amidst handcrafted terracotta statues, historic church backdrop, and open-air party floor.',
+        priceRange: 'Mid-range',
+        openingHours: '8:00 PM - 3:30 AM',
+        image: 'https://images.unsplash.com/photo-1545128485-c400e7702796?w=800',
+        rating: 4.5,
+        reviewCount: 1850,
+        latitude: 15.5120,
+        longitude: 73.7750
+    },
+    {
+        id: 'club-5',
+        name: 'Shiva Valley',
+        type: 'Beach Shack',
+        location: 'Anjuna Beach, North Goa',
+        region: 'North Goa',
+        description: 'The temple of Psytrance on Anjuna beach, famous for Tuesday night trance sessions and authentic beachfront vibe.',
+        priceRange: 'Budget',
+        openingHours: '10:00 AM - 4:00 AM',
+        image: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800',
+        rating: 4.3,
+        reviewCount: 1420,
+        latitude: 15.5790,
+        longitude: 73.7375
+    },
+    {
+        id: 'club-6',
+        name: 'Souza Lobo Beach Shack',
+        type: 'Beach Shack',
+        location: 'Calangute Beach, North Goa',
+        region: 'North Goa',
+        description: 'Historic beachfront shack open since 1932, serving traditional Goan fish curry, fried prawns, and cold drinks right on the sand.',
+        priceRange: 'Mid-range',
+        openingHours: '11:00 AM - 11:30 PM',
+        image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800',
+        rating: 4.6,
+        reviewCount: 3100,
+        latitude: 15.5440,
+        longitude: 73.7550
+    },
+    {
+        id: 'club-7',
+        name: 'Silent Noise Club',
+        type: 'Nightclub',
+        location: 'Palolem Beach, South Goa',
+        region: 'South Goa',
+        description: 'India\'s original headphone party venue on Palolem beach, where revellers dance to wireless multi-channel DJ sets under the stars.',
+        priceRange: 'Mid-range',
+        openingHours: '9:00 PM - 4:00 AM',
+        image: 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800',
+        rating: 4.7,
+        reviewCount: 980,
+        latitude: 15.0100,
+        longitude: 74.0230
+    },
 
     // --- RESTAURANTS & BARS ---
     {
@@ -237,6 +402,51 @@ export const fallbackRealtimePlaces: FallbackPlace[] = [
         latitude: 15.1740,
         longitude: 73.9450
     },
+    {
+        id: 'rest-4',
+        name: 'Gunpowder',
+        type: 'Restaurant & Bar',
+        location: 'Assagao, North Goa',
+        region: 'North Goa',
+        description: 'Set in a traditional Portuguese bungalow, serving famous South Indian peninsula dishes, appams, spicy curries, and craft cocktails.',
+        priceRange: 'Mid-range',
+        openingHours: '12:00 PM - 10:30 PM',
+        image: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=800',
+        rating: 4.7,
+        reviewCount: 1950,
+        latitude: 15.5900,
+        longitude: 73.7650
+    },
+    {
+        id: 'rest-5',
+        name: 'Pousada by the Beach',
+        type: 'Restaurant & Bar',
+        location: 'Calangute Beach, North Goa',
+        region: 'North Goa',
+        description: 'Intimate beachfront dining tucked away from crowds, serving Goan seafood, crab xec xec, and sangria right by the shore.',
+        priceRange: 'Luxury',
+        openingHours: '11:00 AM - 7:00 PM',
+        image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800',
+        rating: 4.8,
+        reviewCount: 1100,
+        latitude: 15.5380,
+        longitude: 73.7570
+    },
+    {
+        id: 'rest-6',
+        name: 'Mum\'s Kitchen',
+        type: 'Restaurant & Bar',
+        location: 'Panaji, North Goa',
+        region: 'North Goa',
+        description: 'Dedicated to preserving authentic Goan mother recipes from traditional Christian and Hindu households across the state.',
+        priceRange: 'Mid-range',
+        openingHours: '11:00 AM - 11:00 PM',
+        image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800',
+        rating: 4.6,
+        reviewCount: 1720,
+        latitude: 15.4980,
+        longitude: 73.8190
+    },
 
     // --- CAFES ---
     {
@@ -283,5 +493,50 @@ export const fallbackRealtimePlaces: FallbackPlace[] = [
         reviewCount: 940,
         latitude: 15.4950,
         longitude: 73.8290
+    },
+    {
+        id: 'cafe-4',
+        name: 'Baba Au Rhum',
+        type: 'Cafe',
+        location: 'Anjuna / Arpora, North Goa',
+        region: 'North Goa',
+        description: 'Famous French bakery and cafe nestled among green bamboo groves, offering fresh croissants, wood-fired pizzas, and cold brew coffee.',
+        priceRange: 'Mid-range',
+        openingHours: '9:00 AM - 10:30 PM',
+        image: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=800',
+        rating: 4.7,
+        reviewCount: 2100,
+        latitude: 15.5750,
+        longitude: 73.7580
+    },
+    {
+        id: 'cafe-5',
+        name: 'Cafe Chocolatti',
+        type: 'Cafe',
+        location: 'Fort Aguada Road, Candolim, North Goa',
+        region: 'North Goa',
+        description: 'English garden cafe serving homemade chocolates, English breakfast, scones, and artisan cakes in a leafy Candolim garden.',
+        priceRange: 'Mid-range',
+        openingHours: '9:00 AM - 7:00 PM',
+        image: 'https://images.unsplash.com/photo-1559925393-8be0ec4767c8?w=800',
+        rating: 4.5,
+        reviewCount: 890,
+        latitude: 15.5170,
+        longitude: 73.7630
+    },
+    {
+        id: 'cafe-6',
+        name: 'Carpe Diem Cafe',
+        type: 'Cafe',
+        location: 'Majorda, South Goa',
+        region: 'South Goa',
+        description: 'Art center cafe in South Goa surrounded by quiet village greenery, perfect for reading, coffee, and delicious homemade waffles.',
+        priceRange: 'Budget',
+        openingHours: '10:00 AM - 7:00 PM',
+        image: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=800',
+        rating: 4.6,
+        reviewCount: 430,
+        latitude: 15.3120,
+        longitude: 73.9140
     }
 ];
