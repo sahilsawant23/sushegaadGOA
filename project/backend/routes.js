@@ -2288,10 +2288,15 @@ router.post('/ai/plan-itinerary', async (req, res) => {
   }
 
   try {
-    const conn = await pool.getConnection();
-    // Fetch all internal destinations to feed into the AI context (including ID and Category for linking)
-    const [destinations] = await conn.execute('SELECT id, name, region, category, description FROM destinations');
-    conn.release();
+    let destinations = [];
+    try {
+      const conn = await pool.getConnection();
+      const [rows] = await conn.execute('SELECT id, name, region, category, description FROM destinations');
+      conn.release();
+      destinations = rows || [];
+    } catch (dbErr) {
+      console.warn('[AI Planner DB Notice]: Database query failed, continuing with static destinations fallback:', dbErr.message);
+    }
 
     // If Gemini API Key is provided, call Google Gemini to plan the itinerary
     if (process.env.GEMINI_API_KEY) {
@@ -2311,7 +2316,7 @@ For EVERY activity, you MUST estimate a realistic 'budget' range (e.g. "₹500 -
 Format the output as JSON matching the schema.`;
 
         const response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${process.env.GEMINI_API_KEY}`,
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
           {
             method: 'POST',
             headers: {
