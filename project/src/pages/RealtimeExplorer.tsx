@@ -41,22 +41,13 @@ const RealtimeExplorer: React.FC = () => {
     const fetchPlaces = async () => {
         setLoading(true);
         setError(null);
-        try {
-            // Call the backend endpoint
-            const url = `${API_BASE_URL}/realtime/places?category=${selectedCategory}&region=${selectedRegion}&search=${encodeURIComponent(searchQuery)}`;
-            const response = await fetch(url);
-            if (!response.ok) {
-                throw new Error('Backend server temporarily unavailable');
-            }
-            const data = await response.json();
-            if (Array.isArray(data) && data.length > 0) {
-                setPlaces(data);
-            } else {
-                throw new Error('Empty dataset from API');
-            }
-        } catch (err: any) {
-            console.warn('Real-time API notice (using curated fallback places):', err?.message || err);
-            let filtered = [...fallbackRealtimePlaces];
+
+        const filterAndSet = (placesList: any[]) => {
+            const combinedMap = new Map();
+            fallbackRealtimePlaces.forEach(p => combinedMap.set(p.id, p));
+            placesList.forEach(p => combinedMap.set(p.id, p));
+
+            let filtered = Array.from(combinedMap.values());
             if (selectedCategory && selectedCategory !== 'all') {
                 filtered = filtered.filter(p => {
                     const t = p.type.toLowerCase();
@@ -76,6 +67,20 @@ const RealtimeExplorer: React.FC = () => {
                 filtered = filtered.filter(p => p.name.toLowerCase().includes(q) || p.location.toLowerCase().includes(q) || p.description.toLowerCase().includes(q));
             }
             setPlaces(filtered as Place[]);
+        };
+
+        try {
+            const url = `${API_BASE_URL}/realtime/places?category=${selectedCategory}&region=${selectedRegion}&search=${encodeURIComponent(searchQuery)}`;
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error('Backend server temporarily unavailable');
+            }
+            const data = await response.json();
+            const apiPlaces = Array.isArray(data) ? data : [];
+            filterAndSet(apiPlaces);
+        } catch (err: any) {
+            console.warn('Real-time API notice (using curated fallback places):', err?.message || err);
+            filterAndSet([]);
         } finally {
             setLoading(false);
         }

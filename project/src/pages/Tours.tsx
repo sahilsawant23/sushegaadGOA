@@ -35,19 +35,22 @@ const Tours: React.FC = () => {
     fetch(`${API_BASE_URL}/tours`)
       .then(res => res.json())
       .then(data => {
-        // Transform data to match component expectations
-        const transformedTours = Array.isArray(data) && data.length > 0 ? data.map((tour: any) => ({
+        const apiTours = Array.isArray(data) ? data.map((tour: any) => ({
           ...tour,
           images: tour.image_url ? [tour.image_url] : (tour.images || []),
           duration: tour.duration || `${tour.duration_hours || 0} hours`,
           maxGroupSize: tour.maxGroupSize || tour.max_participants,
           reviewCount: tour.reviewCount || tour.review_count || 0
-        })) : mockTours;
-        setTours(transformedTours);
+        })) : [];
+
+        const mergedMap = new Map();
+        mockTours.forEach(mt => mergedMap.set(String(mt.id), mt));
+        apiTours.forEach(at => mergedMap.set(String(at.id), at));
+        setTours(Array.from(mergedMap.values()));
         setLoading(false);
       })
       .catch(err => {
-        console.error('Failed to load live tours, fallback to mock data', err);
+        console.warn('Failed to load live tours, fallback to mock dataset:', err);
         setTours(mockTours);
         setLoading(false);
       });
