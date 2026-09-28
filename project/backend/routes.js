@@ -3668,11 +3668,7 @@ out body 300;`;
         const mockRevs = [
           { author: author1, rating: 5, comment: text1 },
           { author: author2, rating: 4, comment: text2 }
-        ];
-        p.reviewsList = [...userRevs, ...mockRevs];
-        return p;
-      });
-    } catch (dbError) {
+        ];    } catch (dbError) {
       console.warn('Cache fallback failed, serving curated static places:', dbError.message);
       const staticPlaces = [
         {
@@ -3691,6 +3687,36 @@ out body 300;`;
           longitude: 73.8245
         },
         {
+          id: 'premium-casino-2',
+          name: 'Majestic Pride Casino',
+          type: 'Casino',
+          location: 'River Mandovi, Captain Of Ports Jetty, Panaji',
+          region: 'North Goa',
+          description: 'An exceptional floating casino in Goa, offering a grand gaming floor, delicious dining options, live performances, and an energizing party atmosphere.',
+          priceRange: 'Luxury',
+          openingHours: 'Open 24 Hours (24/7)',
+          image: 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=800',
+          rating: 4.6,
+          reviewCount: 1890,
+          latitude: 15.5020,
+          longitude: 73.8260
+        },
+        {
+          id: 'premium-casino-3',
+          name: 'Big Daddy Casino',
+          type: 'Casino',
+          location: 'Captain of Ports Jetty, Dayanand Bandodkar Marg, Panaji',
+          region: 'North Goa',
+          description: 'A state-of-the-art floating casino on the Mandovi River, featuring offshore gaming, multi-cuisine restaurants, premium bars, and spectacular live dance shows.',
+          priceRange: 'Luxury',
+          openingHours: 'Open 24 Hours (24/7)',
+          image: 'https://images.unsplash.com/photo-1570649236495-42fa5fe3c48b?w=800',
+          rating: 4.7,
+          reviewCount: 3100,
+          latitude: 15.5010,
+          longitude: 73.8230
+        },
+        {
           id: 'rest-1',
           name: 'Thalassa Greek Restaurant',
           type: 'Restaurant & Bar',
@@ -3704,6 +3730,21 @@ out body 300;`;
           reviewCount: 4100,
           latitude: 15.6020,
           longitude: 73.7390
+        },
+        {
+          id: 'rest-2',
+          name: "Martin's Corner",
+          type: 'Restaurant & Bar',
+          location: 'Ranvaddo, Betalbatim, South Goa',
+          region: 'South Goa',
+          description: 'Legendary Goan seafood restaurant serving authentic Fish Curry Rice, Pork Vindaloo, and fresh lobster with live acoustic music.',
+          priceRange: 'Mid-range',
+          openingHours: '11:30 AM - 11:30 PM',
+          image: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800',
+          rating: 4.8,
+          reviewCount: 3500,
+          latitude: 15.2850,
+          longitude: 73.9120
         },
         {
           id: 'club-1',
@@ -3721,6 +3762,36 @@ out body 300;`;
           longitude: 73.7520
         },
         {
+          id: 'club-2',
+          name: 'Curlies Beach Shack',
+          type: 'Beach Shack',
+          location: 'Anjuna Beach, North Goa',
+          region: 'North Goa',
+          description: 'Iconic beachfront shack famous for trance music parties, sunset views, fresh seafood, and relaxed beach lounge seating.',
+          priceRange: 'Mid-range',
+          openingHours: '9:00 AM - 3:00 AM',
+          image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800',
+          rating: 4.4,
+          reviewCount: 2900,
+          latitude: 15.5780,
+          longitude: 73.7380
+        },
+        {
+          id: 'club-3',
+          name: 'Club Cubana',
+          type: 'Nightclub',
+          location: 'Arpora Hill, North Goa',
+          region: 'North Goa',
+          description: 'Known as the "Nightclub in the Sky", featuring a hilltop swimming pool, open canopy dance floors, and breathtaking views.',
+          priceRange: 'Luxury',
+          openingHours: '9:30 PM - 4:00 AM',
+          image: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800',
+          rating: 4.6,
+          reviewCount: 2150,
+          latitude: 15.5680,
+          longitude: 73.7620
+        },
+        {
           id: 'hotel-1',
           name: 'Taj Fort Aguada Resort & Spa',
           type: 'Resort',
@@ -3736,6 +3807,21 @@ out body 300;`;
           longitude: 73.7680
         },
         {
+          id: 'hotel-2',
+          name: 'The Zuri White Sands Resort',
+          type: 'Resort',
+          location: 'Varca Beach, Salcete, South Goa',
+          region: 'South Goa',
+          description: 'An award-winning luxury beach resort located on the pristine Varca beach with sprawling pools, casino, and peaceful surroundings.',
+          priceRange: 'Luxury',
+          openingHours: 'Open 24 Hours (24/7)',
+          image: 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=800',
+          rating: 4.7,
+          reviewCount: 880,
+          latitude: 15.2155,
+          longitude: 73.9295
+        },
+        {
           id: 'cafe-1',
           name: 'Artjuna Garden Cafe',
           type: 'Cafe',
@@ -3749,9 +3835,43 @@ out body 300;`;
           reviewCount: 1650,
           latitude: 15.5810,
           longitude: 73.7450
+        },
+        {
+          id: 'cafe-2',
+          name: 'Eva Cafe',
+          type: 'Cafe',
+          location: 'Anjuna Beach, North Goa',
+          region: 'North Goa',
+          description: 'Boho-chic sea-facing cafe right on the rocks of Anjuna, offering panoramic ocean vistas, avocado toast, and relaxing coffee.',
+          priceRange: 'Mid-range',
+          openingHours: '9:00 AM - 8:00 PM',
+          image: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=800',
+          rating: 4.5,
+          reviewCount: 1280,
+          latitude: 15.5840,
+          longitude: 73.7410
         }
       ];
-      return res.json(staticPlaces);
+
+      let filtered = [...staticPlaces];
+      if (category && category !== 'all') {
+        filtered = filtered.filter(p => {
+          const t = p.type.toLowerCase();
+          if (category === 'hotels') return t.includes('hotel') || t.includes('resort') || t.includes('hostel') || t.includes('guest');
+          if (category === 'restaurants') return t.includes('restaurant') || t.includes('food');
+          if (category === 'cafes') return t.includes('cafe');
+          if (category === 'clubs') return t.includes('club') || t.includes('bar') || t.includes('shack') || t.includes('nightclub') || t.includes('pub');
+          if (category === 'casinos') return t.includes('casino');
+          return true;
+        });
+      }
+      if (region && region !== 'all') {
+        filtered = filtered.filter(p => p.region.toLowerCase() === region.toLowerCase());
+      }
+      if (search) {
+        filtered = filtered.filter(p => p.name.toLowerCase().includes(search.toLowerCase()) || p.location.toLowerCase().includes(search.toLowerCase()));
+      }
+      return res.json(filtered.length > 0 ? filtered : staticPlaces);
     }
   }
 
@@ -3761,17 +3881,113 @@ out body 300;`;
 // GET a single real-time place by ID (from cache or live)
 router.get('/realtime/places/:id', async (req, res) => {
   const { id } = req.params;
+  
+  const fallbackSinglePlaces = [
+    {
+      id: 'cafe-1',
+      name: 'Artjuna Garden Cafe',
+      type: 'Cafe',
+      location: 'Anjuna-Monteiro Vaddo, North Goa',
+      region: 'North Goa',
+      description: 'Charming open-air garden cafe and lifestyle store serving organic breakfasts, artisan coffee, fresh juices, and Mediterranean salads.',
+      priceRange: 'Mid-range',
+      openingHours: '7:30 AM - 10:30 PM',
+      image: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=800',
+      rating: 4.7,
+      reviewCount: 1650,
+      latitude: 15.5810,
+      longitude: 73.7450
+    },
+    {
+      id: 'cafe-2',
+      name: 'Eva Cafe',
+      type: 'Cafe',
+      location: 'Anjuna Beach, North Goa',
+      region: 'North Goa',
+      description: 'Boho-chic sea-facing cafe right on the rocks of Anjuna, offering panoramic ocean vistas, avocado toast, and relaxing coffee.',
+      priceRange: 'Mid-range',
+      openingHours: '9:00 AM - 8:00 PM',
+      image: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=800',
+      rating: 4.5,
+      reviewCount: 1280,
+      latitude: 15.5840,
+      longitude: 73.7410
+    },
+    {
+      id: 'club-1',
+      name: "Tito's Nightclub",
+      type: 'Nightclub',
+      location: "Tito's Lane, Baga Beach, North Goa",
+      region: 'North Goa',
+      description: "The most famous nightclub in Goa, featuring multi-genre music, open-air bar, and legendary DJ nights.",
+      priceRange: 'Mid-range',
+      openingHours: '7:00 PM - 3:00 AM',
+      image: 'https://images.unsplash.com/photo-1566737236500-c8ac43014a67?w=800',
+      rating: 4.5,
+      reviewCount: 3820,
+      latitude: 15.5560,
+      longitude: 73.7520
+    },
+    {
+      id: 'rest-1',
+      name: 'Thalassa Greek Restaurant',
+      type: 'Restaurant & Bar',
+      location: 'Vagator / Siolim, North Goa',
+      region: 'North Goa',
+      description: 'Stunning cliffside Greek restaurant overlooking the Arabian sea, famous for authentic Mediterranean cuisine and spectacular sunset views.',
+      priceRange: 'Luxury',
+      openingHours: '12:00 PM - 1:00 AM',
+      image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800',
+      rating: 4.7,
+      reviewCount: 4100,
+      latitude: 15.6020,
+      longitude: 73.7390
+    },
+    {
+      id: 'hotel-1',
+      name: 'Taj Fort Aguada Resort & Spa',
+      type: 'Resort',
+      location: 'Sinquerim Beach, Candolim, North Goa',
+      region: 'North Goa',
+      description: 'A romantic 5-star beachfront resort steeped in history, offering panoramic ocean views, lush gardens, and signature Taj hospitality.',
+      priceRange: 'Luxury',
+      openingHours: 'Open 24 Hours (24/7)',
+      image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800',
+      rating: 4.9,
+      reviewCount: 1420,
+      latitude: 15.4920,
+      longitude: 73.7680
+    },
+    {
+      id: 'premium-casino-1',
+      name: 'Deltin Royale Casino',
+      type: 'Casino',
+      location: "Noah's Ark, RND Jetty, D. Bandodkar Marg, Panaji",
+      region: 'North Goa',
+      description: "India's largest and most luxurious floating casino. Offers a premium gaming experience, multi-cuisine dining, and live international entertainment on the Mandovi River.",
+      priceRange: 'Luxury',
+      openingHours: 'Open 24 Hours (24/7)',
+      image: 'https://images.unsplash.com/photo-1596838132731-3301c3fd4317?w=800',
+      rating: 4.8,
+      reviewCount: 2450,
+      latitude: 15.5015,
+      longitude: 73.8245
+    }
+  ];
+
+  const foundFallback = fallbackSinglePlaces.find(p => p.id === id);
+
   try {
     const conn = await pool.getConnection();
     const [rows] = await conn.execute('SELECT * FROM realtime_places_cache WHERE id = ?', [id]);
 
     if (rows.length === 0) {
       conn.release();
+      if (foundFallback) return res.json(foundFallback);
       return res.status(404).json({ message: 'Place not found' });
     }
 
     const r = rows[0];
-
     const [dbReviews] = await conn.execute(`
       SELECT r.rating, r.comment, u.full_name AS author 
       FROM reviews r 
@@ -3779,34 +3995,6 @@ router.get('/realtime/places/:id', async (req, res) => {
       WHERE r.tour_id = ?
     `, [id]);
     conn.release();
-
-    const firstNames = ['Vikram', 'Sarah', 'Rahul', 'Elena', 'Amit', 'Riya', 'John', 'Pooja', 'Sam', 'Neha', 'Chris', 'Anita', 'Raj', 'Emma'];
-    const lastNames = ['Mehta', 'Connor', 'Deshmukh', 'Gilbert', 'Sharma', 'Sen', 'Doe', 'Hegde', 'Wilson', 'Kakkar', 'Evans', 'Nair', 'Patel', 'Watson'];
-    const reviewTexts = [
-      'Amazing experience! Would definitely come back.',
-      'Great place, friendly staff and lovely vibe.',
-      'Absolutely loved it. Highly recommended for anyone visiting Goa.',
-      'A bit crowded, but the service was excellent.',
-      'Fantastic! Exceeded our expectations.',
-      'Very good ambiance and reasonable prices.',
-      'The best place in town! 5 stars all the way.',
-      'Nice place, decent food/drinks and good music.',
-      'Wonderful time here with friends.',
-      'Perfect spot to relax and enjoy the evening.'
-    ];
-
-    const numericId = parseInt(id.replace(/\\D/g, '')) || Math.floor(Math.random() * 1000);
-    
-    const author1 = `${firstNames[numericId % firstNames.length]} ${lastNames[(numericId + 1) % lastNames.length]}`;
-    const text1 = reviewTexts[numericId % reviewTexts.length];
-    
-    const author2 = `${firstNames[(numericId + 2) % firstNames.length]} ${lastNames[(numericId + 3) % lastNames.length]}`;
-    const text2 = reviewTexts[(numericId + 4) % reviewTexts.length];
-    
-    const mockRevs = [
-      { author: author1, rating: 5, comment: text1 },
-      { author: author2, rating: 4, comment: text2 }
-    ];
 
     res.json({
       id: r.id,
@@ -3822,10 +4010,14 @@ router.get('/realtime/places/:id', async (req, res) => {
       reviewCount: r.review_count,
       latitude: parseFloat(r.latitude),
       longitude: parseFloat(r.longitude),
-      reviewsList: [...dbReviews, ...mockRevs]
+      reviewsList: dbReviews
     });
   } catch (error) {
-    console.error('Get place by ID error:', error);
+    console.warn('Get place by ID DB error, serving fallback:', error.message);
+    if (foundFallback) return res.json(foundFallback);
+    res.json(fallbackSinglePlaces[0]);
+  }
+});, error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });

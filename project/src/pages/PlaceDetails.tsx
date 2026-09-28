@@ -9,6 +9,7 @@ import { goaChurches } from '../data/churchData';
 import { goaTemples } from '../data/templeData';
 import { goaBeaches } from '../data/beachesData';
 import { goaWaterfalls } from '../data/waterfallData';
+import { fallbackRealtimePlaces } from '../data/fallbackRealtimePlaces';
 import WaterSafetyWidget from '../components/common/WaterSafetyWidget';
 
 const PlaceDetails: React.FC = () => {
@@ -51,7 +52,7 @@ const PlaceDetails: React.FC = () => {
                 .catch(err => console.error('Error fetching reviews:', err));
         };
 
-        if (id && (id.startsWith('osm-') || id.startsWith('premium-'))) {
+        if (id && (id.startsWith('osm-') || id.startsWith('premium-') || id.startsWith('cafe-') || id.startsWith('rest-') || id.startsWith('club-') || id.startsWith('hotel-'))) {
             fetch(`${API_BASE_URL}/realtime/places/${id}`)
                 .then(res => {
                     if (!res.ok) throw new Error('Not found');
@@ -89,8 +90,16 @@ const PlaceDetails: React.FC = () => {
                     fetchReviews(data.id);
                 })
                 .catch(err => {
-                    console.error('Error fetching real-time place:', err);
-                    setLoading(false);
+                    console.warn('API real-time place fetch failed, checking static fallback:', err?.message || err);
+                    const staticData = checkStaticData();
+                    if (staticData) {
+                        setPlace(staticData);
+                        if (staticData.image_url) setActiveImage(staticData.image_url);
+                        setLoading(false);
+                        fetchReviews(staticData.id);
+                    } else {
+                        setLoading(false);
+                    }
                 });
             return;
         }
@@ -118,8 +127,37 @@ const PlaceDetails: React.FC = () => {
                 }
             });
 
-            // check each array
             let found = null;
+
+            // 0. Fallback Realtime Places (cafe-1, rest-1, hotel-1, etc.)
+            const realtimePlace = (fallbackRealtimePlaces as any[]).find((v: any) => String(v.id) === id);
+            if (realtimePlace) {
+                return {
+                    id: realtimePlace.id,
+                    name: realtimePlace.name,
+                    category: realtimePlace.type,
+                    region: realtimePlace.region,
+                    description: realtimePlace.description,
+                    image_url: realtimePlace.image,
+                    gallery_images: [realtimePlace.image],
+                    reviewsList: realtimePlace.reviewsList || [],
+                    details: {
+                        timings: realtimePlace.openingHours,
+                        entryFee: realtimePlace.priceRange === 'Budget' ? 'Budget Friendly' : realtimePlace.priceRange === 'Mid-range' ? 'Moderate Entry Charge' : 'Luxury / Cover Charge Applicable',
+                        bestTime: 'Evening / Night',
+                        bestSeason: 'October to May (Peak Season)',
+                        bestFor: realtimePlace.type.toLowerCase().includes('hotel')
+                            ? ['Accommodation', 'Staycation', 'Relaxation']
+                            : ['Socializing', 'Drinks', 'Fine Dining', 'Local Atmosphere'],
+                        highlights: realtimePlace.type.toLowerCase().includes('hotel')
+                            ? ['Clean Rooms', 'Excellent Amenities', 'Scenic Views']
+                            : ['Live Music', 'Premium Cocktails', 'Great Ambiance'],
+                        safetyTips: realtimePlace.type.toLowerCase().includes('hotel')
+                            ? 'Keep your valuables safe in the hotel room locker.'
+                            : 'Drink responsibly. Book a cab or designate a driver beforehand.'
+                    }
+                };
+            }
 
             // 1. Nightlife
             const nightlife = (goaNightlife as any[]).find((v: any) => String(v.id) === id);
