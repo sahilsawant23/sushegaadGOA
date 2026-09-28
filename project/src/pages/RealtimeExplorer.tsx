@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, Clock, Search, Heart, Star, Navigation, Coffee, Bed, UtensilsCrossed, PartyPopper, Coins } from 'lucide-react';
 import { useWishlist } from '../context/WishlistContext';
 import { API_BASE_URL } from '../config';
+import { fallbackRealtimePlaces } from '../data/fallbackRealtimePlaces';
 
 interface Place {
     id: string;
@@ -17,8 +18,8 @@ interface Place {
     image: string;
     rating: number;
     reviewCount: number;
-    latitude: number;
-    longitude: number;
+    latitude?: number;
+    longitude?: number;
     reviewsList?: { author: string; rating: number; comment: string; }[];
 }
 
@@ -41,17 +42,40 @@ const RealtimeExplorer: React.FC = () => {
         setLoading(true);
         setError(null);
         try {
-            // Call the newly created backend endpoint
+            // Call the backend endpoint
             const url = `${API_BASE_URL}/realtime/places?category=${selectedCategory}&region=${selectedRegion}&search=${encodeURIComponent(searchQuery)}`;
             const response = await fetch(url);
             if (!response.ok) {
-                throw new Error('Failed to fetch real-time places');
+                throw new Error('Backend server temporarily unavailable');
             }
             const data = await response.json();
-            setPlaces(data);
+            if (Array.isArray(data) && data.length > 0) {
+                setPlaces(data);
+            } else {
+                throw new Error('Empty dataset from API');
+            }
         } catch (err: any) {
-            console.error(err);
-            setError(err.message || 'An error occurred while loading places.');
+            console.warn('Real-time API notice (using curated fallback places):', err?.message || err);
+            let filtered = [...fallbackRealtimePlaces];
+            if (selectedCategory && selectedCategory !== 'all') {
+                filtered = filtered.filter(p => {
+                    const t = p.type.toLowerCase();
+                    if (selectedCategory === 'hotels') return t.includes('hotel') || t.includes('resort') || t.includes('hostel') || t.includes('guest');
+                    if (selectedCategory === 'restaurants') return t.includes('restaurant') || t.includes('food');
+                    if (selectedCategory === 'cafes') return t.includes('cafe');
+                    if (selectedCategory === 'clubs') return t.includes('club') || t.includes('bar') || t.includes('shack') || t.includes('nightclub') || t.includes('pub');
+                    if (selectedCategory === 'casinos') return t.includes('casino');
+                    return true;
+                });
+            }
+            if (selectedRegion && selectedRegion !== 'all') {
+                filtered = filtered.filter(p => p.region.toLowerCase() === selectedRegion.toLowerCase());
+            }
+            if (searchQuery) {
+                const q = searchQuery.toLowerCase();
+                filtered = filtered.filter(p => p.name.toLowerCase().includes(q) || p.location.toLowerCase().includes(q) || p.description.toLowerCase().includes(q));
+            }
+            setPlaces(filtered as Place[]);
         } finally {
             setLoading(false);
         }

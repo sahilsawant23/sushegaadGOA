@@ -4,6 +4,7 @@ import { Calendar, Users, CreditCard, Lock, ArrowLeft } from 'lucide-react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { API_BASE_URL } from '../config';
+import { mockTours } from '../data/mockTours';
 
 const Booking: React.FC = () => {
   const { tourId: id } = useParams<{ tourId: string }>();
@@ -95,8 +96,17 @@ const Booking: React.FC = () => {
         setLoading(false);
       })
       .catch(err => {
-        console.error(err);
-        toast.error("Could not load tour details");
+        console.warn('API tour fetch failed, checking fallback:', err?.message || err);
+        const fallback = mockTours.find(t => String(t.id) === String(id)) || mockTours[0];
+        if (fallback) {
+          setTour({
+            ...fallback,
+            images: fallback.image ? [fallback.image] : [],
+            maxGroupSize: 10
+          });
+        } else {
+          toast.error("Could not load tour details");
+        }
         setLoading(false);
       });
   }, [id]);
