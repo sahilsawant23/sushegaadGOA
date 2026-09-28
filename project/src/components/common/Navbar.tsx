@@ -45,12 +45,7 @@ const Navbar: React.FC = () => {
         <div className="flex justify-between h-16 sm:h-18">
           <div className="flex items-center">
             <Link to="/" className="flex items-center space-x-2.5">
-              <div className="p-2 rounded-xl bg-blue-600 text-white shadow-sm">
-                <MapPin className="h-5 w-5" />
-              </div>
-              <span className="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-                सुशेगाद<span className="text-blue-600 dark:text-blue-400">Goa</span>
-              </span>
+              <img src="/logo.png" alt="Sushegaad GOA" className="h-11 sm:h-12 w-auto object-contain" />
             </Link>
           </div>
 
