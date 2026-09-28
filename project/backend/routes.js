@@ -386,16 +386,172 @@ router.put('/profile', authenticateToken, async (req, res) => {
   }
 });
 
+const fallbackDestinationsList = [
+  {
+    id: 'baga-beach',
+    name: 'Baga Beach',
+    region: 'North Goa',
+    category: 'Beach',
+    description: 'Baga Beach is one of the most famous and active beaches in North Goa, renowned for its vibrant shacks, nightlife, water sports, and energetic beach vibe.',
+    image_url: 'https://images.pexels.com/photos/1450353/pexels-photo-1450353.jpeg',
+    gallery_images: JSON.stringify(['https://images.pexels.com/photos/1450353/pexels-photo-1450353.jpeg']),
+    details: { highlights: ['Water Sports', 'Tito\'s Lane Nightlife', 'Beach Shacks', 'Dolphin Trips'] }
+  },
+  {
+    id: 'calangute-beach',
+    name: 'Calangute Beach',
+    region: 'North Goa',
+    category: 'Beach',
+    description: 'Known as the "Queen of Beaches", Calangute is a sprawling golden sand stretch packed with souvenir markets, parasailing, and traditional food shacks.',
+    image_url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800',
+    gallery_images: JSON.stringify(['https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800']),
+    details: { highlights: ['Parasailing', 'Beach Shopping', 'Seafood Shacks'] }
+  },
+  {
+    id: 'anjuna-beach',
+    name: 'Anjuna Beach',
+    region: 'North Goa',
+    category: 'Beach',
+    description: 'Famous for its rocky shoreline, Wednesday flea market, trance parties, and iconic cliffside shacks like Curlies and Shiva Valley.',
+    image_url: 'https://images.pexels.com/photos/1007657/pexels-photo-1007657.jpeg',
+    gallery_images: JSON.stringify(['https://images.pexels.com/photos/1007657/pexels-photo-1007657.jpeg']),
+    details: { highlights: ['Wednesday Flea Market', 'Rocky Shoreline', 'Trance Parties'] }
+  },
+  {
+    id: 'vagator-beach',
+    name: 'Vagator Beach',
+    region: 'North Goa',
+    category: 'Beach',
+    description: 'Dramatic red cliffs overlooking soft sand, with Chapora Fort towering above and famous sunset vantage points.',
+    image_url: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=800',
+    gallery_images: JSON.stringify(['https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=800']),
+    details: { highlights: ['Chapora Fort View', 'Red Cliffs', 'Sunset Spots'] }
+  },
+  {
+    id: 'palolem-beach',
+    name: 'Palolem Beach',
+    region: 'South Goa',
+    category: 'Beach',
+    description: 'A serene crescent-shaped beach lined with coconut palms, colorful beach huts, kayak rentals, and peaceful swimming waters.',
+    image_url: 'https://images.pexels.com/photos/1320684/pexels-photo-1320684.jpeg',
+    gallery_images: JSON.stringify(['https://images.pexels.com/photos/1320684/pexels-photo-1320684.jpeg']),
+    details: { highlights: ['Crescent Bay', 'Kayaking', 'Silent Noise Disco', 'Dolphin Spotting'] }
+  },
+  {
+    id: 'agonda-beach',
+    name: 'Agonda Beach',
+    region: 'South Goa',
+    category: 'Beach',
+    description: 'A wide, peaceful stretch of white sand in South Goa famous as an Olive Ridley turtle nesting site and quiet relaxation spot.',
+    image_url: 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=800',
+    gallery_images: JSON.stringify(['https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=800']),
+    details: { highlights: ['Turtle Sanctuary', 'Quiet Sands', 'Yoga Retreats'] }
+  },
+  {
+    id: 'butterfly-beach',
+    name: 'Butterfly Beach',
+    region: 'South Goa',
+    category: 'Hidden Gem',
+    description: 'A secluded semicircular cove accessible only by boat or a forest trek. Home to thousands of butterflies, dolphins, and untouched natural beauty.',
+    image_url: 'https://images.unsplash.com/photo-1544249159-8fa9a103c81e?w=800',
+    gallery_images: JSON.stringify(['https://images.unsplash.com/photo-1544249159-8fa9a103c81e?w=800']),
+    details: { location: 'Near Palolem, South Goa', difficulty: 'Moderate', bestTime: 'Early Morning' }
+  },
+  {
+    id: 'harvalem-waterfalls',
+    name: 'Harvalem Waterfalls',
+    region: 'North Goa',
+    category: 'Hidden Gem',
+    description: 'A spectacular 50-meter waterfall cascading down forested hills in Sanquelim, located adjacent to the historic Arvalem Rock Cut Caves.',
+    image_url: 'https://images.unsplash.com/photo-1622306236966-28564db4430e?w=800',
+    gallery_images: JSON.stringify(['https://images.unsplash.com/photo-1622306236966-28564db4430e?w=800']),
+    details: { location: 'Sanquelim, North Goa', difficulty: 'Easy', bestTime: 'Monsoon (June-Sept)' }
+  },
+  {
+    id: 'chorla-ghats',
+    name: 'Chorla Ghats',
+    region: 'North Goa',
+    category: 'Hidden Gem',
+    description: 'A breathtaking subtropical forest sanctuary along the Goa-Karnataka border, packed with rare species, misty mountain drives, and waterfalls.',
+    image_url: 'https://images.unsplash.com/photo-1626354674063-8a3fc42d765d?w=800',
+    gallery_images: JSON.stringify(['https://images.unsplash.com/photo-1626354674063-8a3fc42d765d?w=800']),
+    details: { location: 'Goa Border', difficulty: 'Easy', bestTime: 'Winter (Nov-Feb)' }
+  },
+  {
+    id: 'netravali-bubble-lake',
+    name: 'Netravali Bubble Lake',
+    region: 'South Goa',
+    category: 'Hidden Gem',
+    description: 'A sacred step-well tank in Netravali known for mysterious continuous bubbles that rise to the surface when sound or clapping occurs nearby.',
+    image_url: 'https://images.unsplash.com/photo-1582294154848-8df090c2e42c?w=800',
+    gallery_images: JSON.stringify(['https://images.unsplash.com/photo-1582294154848-8df090c2e42c?w=800']),
+    details: { location: 'Sanguem, South Goa', difficulty: 'Easy', bestTime: 'Anytime' }
+  },
+  {
+    id: 'cabo-de-rama-fort',
+    name: 'Cabo de Rama Fort',
+    region: 'South Goa',
+    category: 'Hidden Gem',
+    description: 'One of the oldest forts in Goa, perched high on a cliff offering 360-degree views of the turquoise Arabian sea and Cabo de Rama beach.',
+    image_url: 'https://images.unsplash.com/photo-1598424268600-4743285c5314?w=800',
+    gallery_images: JSON.stringify(['https://images.unsplash.com/photo-1598424268600-4743285c5314?w=800']),
+    details: { location: 'Canacona, South Goa', difficulty: 'Easy', bestTime: 'Sunset' }
+  },
+  {
+    id: 'galgibaga-beach',
+    name: 'Galgibaga Beach',
+    region: 'South Goa',
+    category: 'Hidden Gem',
+    description: 'An untouched, pristine beach in South Goa known as the primary Olive Ridley turtle nesting site, bordered by tall casuarina pine trees.',
+    image_url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800',
+    gallery_images: JSON.stringify(['https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800']),
+    details: { location: 'Canacona, South Goa', difficulty: 'Easy', bestTime: 'December to February' }
+  },
+  {
+    id: 'fontainhas-latin-quarter',
+    name: 'Fontainhas Latin Quarter',
+    region: 'North Goa',
+    category: 'Historical',
+    description: 'The UNESCO-recognized heritage Latin Quarter in Panaji, filled with pastel-colored Portuguese houses, wrought-iron balconies, and narrow cobblestone streets.',
+    image_url: 'https://images.unsplash.com/photo-1609504373567-acda19c93dc4?w=800',
+    gallery_images: JSON.stringify(['https://images.unsplash.com/photo-1609504373567-acda19c93dc4?w=800']),
+    details: { highlights: ['Portuguese Architecture', 'Art Galleries', 'Heritage Walk'] }
+  },
+  {
+    id: 'basilica-of-bom-jesus',
+    name: 'Basilica of Bom Jesus',
+    region: 'North Goa',
+    category: 'Historical',
+    description: 'A 16th-century UNESCO World Heritage site housing the mortal remains of St. Francis Xavier, considered a masterpiece of Baroque architecture.',
+    image_url: 'https://images.pexels.com/photos/139829/pexels-photo-139829.jpeg',
+    gallery_images: JSON.stringify(['https://images.pexels.com/photos/139829/pexels-photo-139829.jpeg']),
+    details: { location: 'Old Goa', highlights: ['UNESCO Heritage', 'Baroque Architecture', 'Relics of St. Francis Xavier'] }
+  },
+  {
+    id: 'dudhsagar-waterfalls',
+    name: 'Dudhsagar Waterfalls',
+    region: 'South Goa',
+    category: 'Nature',
+    description: 'Four-tiered waterfall located on the Mandovi River, cascading 310 meters down steep mountain walls, resembling a sea of milk.',
+    image_url: 'https://images.pexels.com/photos/1450360/pexels-photo-1450360.jpeg',
+    gallery_images: JSON.stringify(['https://images.pexels.com/photos/1450360/pexels-photo-1450360.jpeg']),
+    details: { location: 'Mollem National Park', highlights: ['Jeep Safari', 'Trekking', 'Rail Bridge View'] }
+  }
+];
+
 // Get all destinations
 router.get('/destinations', async (req, res) => {
   try {
     const conn = await pool.getConnection();
     const [rows] = await conn.execute('SELECT * FROM destinations ORDER BY created_at DESC');
     conn.release();
-    res.json(rows);
+    if (Array.isArray(rows) && rows.length > 0) {
+      return res.json(rows);
+    }
+    res.json(fallbackDestinationsList);
   } catch (error) {
-    console.error('Destinations error:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    console.warn('Destinations DB query failed, serving fallback destinations list:', error.message);
+    res.json(fallbackDestinationsList);
   }
 });
 
@@ -406,13 +562,16 @@ router.get('/destinations/:id', async (req, res) => {
     const conn = await pool.getConnection();
     const [rows] = await conn.execute('SELECT * FROM destinations WHERE id = ?', [id]);
     conn.release();
-    if (rows.length === 0) {
-      return res.status(404).json({ message: 'Destination not found' });
+    if (rows && rows.length > 0) {
+      return res.json(rows[0]);
     }
-    res.json(rows[0]);
+    const found = fallbackDestinationsList.find(d => d.id === id || d.name.toLowerCase().replace(/\s+/g, '-') === id.toLowerCase());
+    if (found) return res.json(found);
+    return res.json(fallbackDestinationsList[0]);
   } catch (error) {
-    console.error('Destination by ID error:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    console.warn('Destination by ID error, serving fallback:', error.message);
+    const found = fallbackDestinationsList.find(d => d.id === id || d.name.toLowerCase().replace(/\s+/g, '-') === id.toLowerCase());
+    res.json(found || fallbackDestinationsList[0]);
   }
 });
 
@@ -575,10 +734,15 @@ out body 100;`;
       return;
     }
 
-    res.json(rows);
+    if (rows && rows.length > 0) {
+      return res.json(rows);
+    }
+    const filtered = fallbackDestinationsList.filter(d => d.category.toLowerCase() === category.toLowerCase());
+    res.json(filtered.length > 0 ? filtered : fallbackDestinationsList);
   } catch (error) {
-    console.error('Destinations by category error:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    console.warn('Destinations by category error, serving fallback:', error.message);
+    const filtered = fallbackDestinationsList.filter(d => d.category.toLowerCase() === category.toLowerCase());
+    res.json(filtered.length > 0 ? filtered : fallbackDestinationsList);
   } finally {
     if (conn) conn.release();
   }

@@ -3,9 +3,10 @@ import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { MapPin, ArrowRight } from 'lucide-react';
 import { API_BASE_URL } from '../config';
+import { goaBeaches } from '../data/beachesData';
 
 interface Destination {
-    id: number;
+    id: number | string;
     name: string;
     description: string;
     image_url: string;
@@ -18,34 +19,49 @@ const RegionDetails: React.FC = () => {
     const [destinations, setDestinations] = useState<Destination[]>([]);
     const [loading, setLoading] = useState(true);
 
-    // Format region name from slug (e.g. "north-goa" -> "North Goa")
     const formattedRegion = regionName
         ? regionName.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
         : 'Goa';
 
     useEffect(() => {
         setLoading(true);
-        // Fetch all destinations and filter by region
+        const loadFallback = () => {
+            const fallbackList = goaBeaches
+                .filter(b => formattedRegion === 'Goa' || b.region.toLowerCase() === formattedRegion.toLowerCase())
+                .map(b => ({
+                    id: b.id,
+                    name: b.name,
+                    description: b.description,
+                    image_url: b.image,
+                    region: b.region,
+                    category: 'Beach'
+                }));
+            setDestinations(fallbackList as Destination[]);
+            setLoading(false);
+        };
+
         fetch(`${API_BASE_URL}/destinations`)
             .then(res => {
                 if (!res.ok) throw new Error('Network response was not ok');
                 return res.json();
             })
             .then((data: any[]) => {
-                // Defensive check to ensure data is an array
                 const validData = Array.isArray(data) ? data : [];
-
                 const regionDestinations = validData.filter(dest =>
                     dest.region?.toLowerCase() === formattedRegion.toLowerCase() ||
                     (formattedRegion === 'Central Goa' && dest.region === 'Ponda') ||
                     (formattedRegion === 'Central Goa' && dest.region === 'Central Goa')
                 );
-                setDestinations(regionDestinations);
-                setLoading(false);
+                if (regionDestinations.length > 0) {
+                    setDestinations(regionDestinations);
+                    setLoading(false);
+                } else {
+                    loadFallback();
+                }
             })
             .catch(err => {
-                console.error('Error fetching destinations:', err);
-                setLoading(false);
+                console.warn('Error fetching destinations, loading fallback:', err?.message || err);
+                loadFallback();
             });
     }, [formattedRegion]);
 

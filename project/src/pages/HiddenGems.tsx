@@ -4,6 +4,7 @@ import { Lock, MapPin, ArrowRight, Loader } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { API_BASE_URL } from '../config';
+import { hiddenGemsData } from '../data/hiddenGemsData';
 
 interface Gem {
     id: number | string;
@@ -23,20 +24,37 @@ const HiddenGems: React.FC = () => {
 
     useEffect(() => {
         setLoading(true);
-        // Encode "Hidden Gem" as the category
+        const loadFallbackGems = () => {
+            const fallback = hiddenGemsData.map(g => ({
+                id: g.id,
+                name: g.title,
+                description: g.description,
+                image_url: g.image,
+                region: g.location,
+                category: 'Hidden Gem',
+                details: { difficulty: g.difficulty, bestTime: g.bestTime, location: g.location }
+            }));
+            setGems(fallback as Gem[]);
+            setLoading(false);
+        };
+
         fetch(`${API_BASE_URL}/destinations/category/Hidden%20Gem`)
             .then(res => res.json())
             .then(data => {
-                const parsedData = data.map((item: any) => ({
-                    ...item,
-                    details: typeof item.details === 'string' ? JSON.parse(item.details) : item.details || {}
-                }));
-                setGems(parsedData);
-                setLoading(false);
+                if (Array.isArray(data) && data.length > 0) {
+                    const parsedData = data.map((item: any) => ({
+                        ...item,
+                        details: typeof item.details === 'string' ? JSON.parse(item.details) : item.details || {}
+                    }));
+                    setGems(parsedData);
+                    setLoading(false);
+                } else {
+                    loadFallbackGems();
+                }
             })
             .catch(err => {
-                console.error('Error fetching hidden gems:', err);
-                setLoading(false);
+                console.warn('Error fetching hidden gems, loading fallback:', err?.message || err);
+                loadFallbackGems();
             });
     }, []);
 
