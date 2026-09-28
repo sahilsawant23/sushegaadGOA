@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0284c7" />
+      <stop offset="50%" stop-color="#2563eb" />
+      <stop offset="100%" stop-color="#1d4ed8" />
+    </linearGradient>
+    <linearGradient id="sunGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24" />
+      <stop offset="100%" stop-color="#f59e0b" />
+    </linearGradient>
+    <linearGradient id="pinGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="100%" stop-color="#f1f5f9" />
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#0f172a" flood-opacity="0.3" />
+    </filter>
+  </defs>
+
+  <!-- Background Rounded Squircle -->
+  <rect x="16" y="16" width="480" height="480" rx="120" fill="url(#bgGrad)" />
+
+  <!-- Tropical Sun -->
+  <circle cx="360" cy="140" r="60" fill="url(#sunGrad)" opacity="0.95" />
+
+  <!-- Waves Background -->
+  <path d="M 64 360 C 140 330, 200 390, 280 360 C 360 330, 420 380, 448 370 L 448 432 L 64 432 Z" fill="#ffffff" opacity="0.15" />
+  <path d="M 64 390 C 150 370, 220 410, 310 380 C 380 360, 410 400, 448 395 L 448 448 C 448 470, 430 488, 408 488 L 104 488 C 82 488, 64 470, 64 448 Z" fill="#ffffff" opacity="0.25" />
+
+  <!-- MapPin Logo Icon -->
+  <g filter="url(#shadow)" transform="translate(144, 76)">
+    <path d="M 112 0 C 50.1 0 0 50.1 0 112 C 0 196 112 320 112 320 C 112 320 224 196 224 112 C 224 50.1 173.9 0 112 0 Z" fill="url(#pinGrad)" />
+    <circle cx="112" cy="112" r="54" fill="#2563eb" />
+    <!-- Palm Leaves overlay -->
+    <path d="M 112 70 Q 122 96 114 140 Q 112 144 108 140 Q 102 96 112 70 Z" fill="#ffffff" />
+    <path d="M 112 85 Q 80 78 62 95 Q 86 98 110 93 Z" fill="#38bdf8" />
+    <path d="M 112 85 Q 144 78 162 95 Q 138 98 114 93 Z" fill="#38bdf8" />
+    <path d="M 112 98 Q 72 102 60 122 Q 84 116 110 106 Z" fill="#fbbf24" />
+    <path d="M 112 98 Q 152 102 164 122 Q 140 116 114 106 Z" fill="#fbbf24" />
+  </g>
+</svg>
