@@ -28,7 +28,7 @@ const PlaceDetails: React.FC = () => {
                 .then(resData => {
                     const dbRevs = resData.reviews || [];
                     setPlace((prev: any) => {
-                        if (!prev) return prev
+                        if (!prev) return prev;
 
                         const existingList = prev.reviewsList || [];
 
@@ -52,6 +52,103 @@ const PlaceDetails: React.FC = () => {
                 .catch(err => console.error('Error fetching reviews:', err));
         };
 
+        const checkStaticData = () => {
+            // Helper to adapt static data to new schema
+            const adapt = (item: any, cat: string) => ({
+                ...item,
+                category: cat,
+                region: item.region || item.location, // Fallback for region
+                image_url: item.image,
+                gallery_images: item.images || [item.image],
+                details: {
+                    highlights: item.highlights || item.significance,
+                    openingHours: item.openingHours || item.bestTimeToVisit || item.timings,
+                    bestTime: item.openingHours || (item.bestTimeToVisit ? item.bestTimeToVisit.join(', ') : item.timings),
+                    timings: item.openingHours || item.timings || (item.bestTimeToVisit ? item.bestTimeToVisit.join(', ') : null),
+                    priceRange: item.priceRange || item.entryFee,
+                    bestFor: item.bestFor || item.nearbyPlaces,
+                    history: item.history,
+                    architecture: item.architecture,
+                    bestSeason: item.bestSeason,
+                    safetyTips: item.safetyTips,
+                    ...item // spread original just in case
+                }
+            });
+
+            let found = null;
+
+            // 0. Fallback Realtime Places (cafe-1, rest-1, hotel-1, club-1, club-2, etc.)
+            const realtimePlace = (fallbackRealtimePlaces as any[]).find((v: any) => String(v.id) === id || String(v.id).toLowerCase() === id?.toLowerCase());
+            if (realtimePlace) {
+                return {
+                    id: realtimePlace.id,
+                    name: realtimePlace.name,
+                    category: realtimePlace.type,
+                    region: realtimePlace.region,
+                    description: realtimePlace.description,
+                    image_url: realtimePlace.image,
+                    gallery_images: [realtimePlace.image],
+                    reviewsList: realtimePlace.reviewsList || [],
+                    details: {
+                        timings: realtimePlace.openingHours,
+                        entryFee: realtimePlace.priceRange === 'Budget' ? 'Budget Friendly' : realtimePlace.priceRange === 'Mid-range' ? 'Moderate Entry Charge' : 'Luxury / Cover Charge Applicable',
+                        bestTime: 'Evening / Night',
+                        bestSeason: 'October to May (Peak Season)',
+                        bestFor: realtimePlace.type.toLowerCase().includes('hotel')
+                            ? ['Accommodation', 'Staycation', 'Relaxation']
+                            : ['Socializing', 'Drinks', 'Fine Dining', 'Local Atmosphere'],
+                        highlights: realtimePlace.type.toLowerCase().includes('hotel')
+                            ? ['Clean Rooms', 'Excellent Amenities', 'Scenic Views']
+                            : ['Live Music', 'Premium Cocktails', 'Great Ambiance'],
+                        safetyTips: realtimePlace.type.toLowerCase().includes('hotel')
+                            ? 'Keep your valuables safe in the hotel room locker.'
+                            : 'Drink responsibly. Book a cab or designate a driver beforehand.'
+                    }
+                };
+            }
+
+            // 1. Nightlife
+            const nightlife = (goaNightlife as any[]).find((v: any) => String(v.id) === id || String(v.id).toLowerCase() === id?.toLowerCase());
+            if (nightlife) found = adapt(nightlife, 'Nightlife');
+
+            // 2. Churches
+            if (!found) {
+                const church = (goaChurches as any[]).find((v: any) => String(v.id) === id);
+                if (church) found = adapt(church, 'Church');
+            }
+
+            // 3. Temples
+            if (!found) {
+                const temple = (goaTemples as any[]).find((v: any) => String(v.id) === id);
+                if (temple) found = adapt(temple, 'Temple');
+            }
+
+            // 4. Beaches
+            if (!found) {
+                const beach = (goaBeaches as any[]).find((v: any) => String(v.id) === id);
+                if (beach) found = adapt(beach, 'Beach');
+            }
+
+            // 5. Waterfalls
+            if (!found) {
+                const waterfall = (goaWaterfalls as any[]).find((v: any) => String(v.id) === id);
+                if (waterfall) found = adapt(waterfall, 'Waterfall');
+            }
+
+            return found;
+        };
+
+        // Check static fallback FIRST (0ms synchronous response)
+        const staticData = checkStaticData();
+        if (staticData) {
+            setPlace(staticData);
+            if (staticData.image_url) setActiveImage(staticData.image_url);
+            setLoading(false);
+            fetchReviews(staticData.id);
+            return;
+        }
+
+        // If not found in static data, try API (for dynamic openstreetmap places)
         if (id && (id.startsWith('osm-') || id.startsWith('premium-') || id.startsWith('cafe-') || id.startsWith('rest-') || id.startsWith('club-') || id.startsWith('hotel-'))) {
             fetch(`${API_BASE_URL}/realtime/places/${id}`)
                 .then(res => {
@@ -90,117 +187,12 @@ const PlaceDetails: React.FC = () => {
                     fetchReviews(data.id);
                 })
                 .catch(err => {
-                    console.warn('API real-time place fetch failed, checking static fallback:', err?.message || err);
-                    const staticData = checkStaticData();
-                    if (staticData) {
-                        setPlace(staticData);
-                        if (staticData.image_url) setActiveImage(staticData.image_url);
-                        setLoading(false);
-                        fetchReviews(staticData.id);
-                    } else {
-                        setLoading(false);
-                    }
+                    console.warn('API real-time place fetch failed:', err?.message || err);
+                    setLoading(false);
                 });
             return;
         }
 
-        const checkStaticData = () => {
-            // Helper to adapt static data to new schema
-            const adapt = (item: any, cat: string) => ({
-                ...item,
-                category: cat,
-                region: item.region || item.location, // Fallback for region
-                image_url: item.image,
-                gallery_images: item.images,
-                details: {
-                    highlights: item.significance || item.highlights,
-                    openingHours: item.bestTimeToVisit || item.timings,
-                    bestTime: item.bestTimeToVisit ? item.bestTimeToVisit.join(', ') : item.timings,
-                    timings: item.timings || (item.bestTimeToVisit ? item.bestTimeToVisit.join(', ') : null),
-                    priceRange: item.entryFee,
-                    bestFor: item.nearbyPlaces || item.bestFor,
-                    history: item.history,
-                    architecture: item.architecture,
-                    bestSeason: item.bestSeason,
-                    safetyTips: item.safetyTips,
-                    ...item // spread original just in case
-                }
-            });
-
-            let found = null;
-
-            // 0. Fallback Realtime Places (cafe-1, rest-1, hotel-1, etc.)
-            const realtimePlace = (fallbackRealtimePlaces as any[]).find((v: any) => String(v.id) === id);
-            if (realtimePlace) {
-                return {
-                    id: realtimePlace.id,
-                    name: realtimePlace.name,
-                    category: realtimePlace.type,
-                    region: realtimePlace.region,
-                    description: realtimePlace.description,
-                    image_url: realtimePlace.image,
-                    gallery_images: [realtimePlace.image],
-                    reviewsList: realtimePlace.reviewsList || [],
-                    details: {
-                        timings: realtimePlace.openingHours,
-                        entryFee: realtimePlace.priceRange === 'Budget' ? 'Budget Friendly' : realtimePlace.priceRange === 'Mid-range' ? 'Moderate Entry Charge' : 'Luxury / Cover Charge Applicable',
-                        bestTime: 'Evening / Night',
-                        bestSeason: 'October to May (Peak Season)',
-                        bestFor: realtimePlace.type.toLowerCase().includes('hotel')
-                            ? ['Accommodation', 'Staycation', 'Relaxation']
-                            : ['Socializing', 'Drinks', 'Fine Dining', 'Local Atmosphere'],
-                        highlights: realtimePlace.type.toLowerCase().includes('hotel')
-                            ? ['Clean Rooms', 'Excellent Amenities', 'Scenic Views']
-                            : ['Live Music', 'Premium Cocktails', 'Great Ambiance'],
-                        safetyTips: realtimePlace.type.toLowerCase().includes('hotel')
-                            ? 'Keep your valuables safe in the hotel room locker.'
-                            : 'Drink responsibly. Book a cab or designate a driver beforehand.'
-                    }
-                };
-            }
-
-            // 1. Nightlife
-            const nightlife = (goaNightlife as any[]).find((v: any) => String(v.id) === id);
-            if (nightlife) found = adapt(nightlife, 'Nightlife');
-
-            // 2. Churches
-            if (!found) {
-                const church = (goaChurches as any[]).find((v: any) => String(v.id) === id);
-                if (church) found = adapt(church, 'Church');
-            }
-
-            // 3. Temples
-            if (!found) {
-                const temple = (goaTemples as any[]).find((v: any) => String(v.id) === id);
-                if (temple) found = adapt(temple, 'Temple');
-            }
-
-            // 4. Beaches
-            if (!found) {
-                const beach = (goaBeaches as any[]).find((v: any) => String(v.id) === id);
-                if (beach) found = adapt(beach, 'Beach');
-            }
-
-            // 5. Waterfalls
-            if (!found) {
-                const waterfall = (goaWaterfalls as any[]).find((v: any) => String(v.id) === id);
-                if (waterfall) found = adapt(waterfall, 'Waterfall');
-            }
-
-            return found;
-        };
-
-        // Try to find in static data first (fastest and covers legacy IDs)
-        const staticData = checkStaticData();
-        if (staticData) {
-            setPlace(staticData);
-            if (staticData.image_url) setActiveImage(staticData.image_url);
-            setLoading(false);
-            fetchReviews(staticData.id);
-            return;
-        }
-
-        // If not found statically, try API
         fetch(`${API_BASE_URL}/destinations/${id}`)
             .then(res => {
                 if (!res.ok) throw new Error('Not found');

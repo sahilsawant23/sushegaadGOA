@@ -1,3 +1,5 @@
+import { goaNightlife } from './nightlifeData';
+
 export interface FallbackPlace {
     id: string;
     name: string;
@@ -15,7 +17,7 @@ export interface FallbackPlace {
     reviewsList?: { author: string; rating: number; comment: string }[];
 }
 
-export const fallbackRealtimePlaces: FallbackPlace[] = [
+const initialFallbackRealtimePlaces: FallbackPlace[] = [
     // --- CASINOS ---
     {
         id: 'premium-casino-1',
@@ -540,3 +542,27 @@ export const fallbackRealtimePlaces: FallbackPlace[] = [
         longitude: 73.9140
     }
 ];
+
+const mappedNightlifePlaces: FallbackPlace[] = goaNightlife.map(v => ({
+    id: v.id,
+    name: v.name,
+    type: v.type,
+    location: v.location,
+    region: v.region,
+    description: v.description,
+    priceRange: v.priceRange,
+    openingHours: v.openingHours,
+    image: v.image,
+    rating: v.rating,
+    reviewCount: v.reviewCount
+}));
+
+const combinedMap = new Map<string, FallbackPlace>();
+initialFallbackRealtimePlaces.forEach(p => combinedMap.set(p.id, p));
+mappedNightlifePlaces.forEach(p => {
+    if (!combinedMap.has(p.id)) {
+        combinedMap.set(p.id, p);
+    }
+});
+
+export const fallbackRealtimePlaces: FallbackPlace[] = Array.from(combinedMap.values());
