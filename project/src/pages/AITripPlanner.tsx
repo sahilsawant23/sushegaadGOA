@@ -99,7 +99,7 @@ const generateFallbackItinerary = (daysNum: number, budgetStr: string, interests
       activities: [
         {
           time: '09:00 AM - 12:30 PM',
-          place: morningItem.name || morningItem.title,
+          place: morningItem.name || (morningItem as any).title,
           description: morningItem.description || `Enjoy the best of Goa's ${morningInterest}.`,
           budget: budgetStr.includes('USD') ? '$10 - $25' : '₹500 - ₹1500',
           distance: '5 km from stay',
@@ -109,7 +109,7 @@ const generateFallbackItinerary = (daysNum: number, budgetStr: string, interests
         },
         {
           time: '01:00 PM - 04:00 PM',
-          place: afternoonItem.name || afternoonItem.title,
+          place: afternoonItem.name || (afternoonItem as any).title,
           description: afternoonItem.description || `Relax and experience Goan ${afternoonInterest}.`,
           budget: budgetStr.includes('USD') ? '$15 - $35' : '₹800 - ₹2500',
           distance: '8 km from morning spot',
@@ -119,7 +119,7 @@ const generateFallbackItinerary = (daysNum: number, budgetStr: string, interests
         },
         {
           time: '05:00 PM - 10:00 PM',
-          place: eveningItem.name || eveningItem.title,
+          place: eveningItem.name || (eveningItem as any).title,
           description: eveningItem.description || `Unwind with Goa's vibrant ${eveningInterest}.`,
           budget: budgetStr.includes('USD') ? '$20 - $50' : '₹1000 - ₹3000',
           distance: '6 km from afternoon spot',
