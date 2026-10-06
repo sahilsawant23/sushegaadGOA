@@ -1,10 +1,36 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../config';
 import { Link } from 'react-router-dom';
 import { MapPin, Heart } from 'lucide-react';
 import { goaAuthenticExperiences } from '../data/authenticData';
 import { useWishlist } from '../context/WishlistContext';
 
 const AuthenticList: React.FC = () => {
+
+  const [realtimeItems, setRealtimeItems] = useState<any[]>(goaAuthenticExperiences);
+
+  useEffect(() => {
+    let isMounted = true;
+    fetch(`${API_BASE_URL}/destinations/category/Authentic`)
+      .then(res => res.ok ? res.json() : [])
+      .then((data: any[]) => {
+        if (isMounted && Array.isArray(data) && data.length > 0) {
+          const mappedData = data.map(d => ({
+            ...d,
+            image: d.image_url || d.image,
+            location: d.details?.location || d.location || 'Goa'
+          }));
+          setRealtimeItems(prev => {
+            const existingIds = new Set(prev.map(p => String(p.id)));
+            const newItems = mappedData.filter(item => !existingIds.has(String(item.id)));
+            return [...prev, ...newItems];
+          });
+        }
+      })
+      .catch(() => {});
+    return () => { isMounted = false; };
+  }, []);
+
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
 
   const toggleWishlist = (e: React.MouseEvent, item: any) => {
@@ -19,7 +45,7 @@ const AuthenticList: React.FC = () => {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-      {goaAuthenticExperiences.map((item) => {
+      {realtimeItems.map((item) => {
         const isWishlisted = isInWishlist(String(item.id), 'authentic');
         return (
           <div

@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../config';
 import { Link } from 'react-router-dom';
 import { MapPin, Heart } from 'lucide-react';
 import { goaTemples } from '../data/templeData';
@@ -9,6 +10,31 @@ interface TempleListProps {
 }
 
 const TempleList: React.FC<TempleListProps> = ({ selectedRegion = 'all' }) => {
+
+  const [realtimeItems, setRealtimeItems] = useState<any[]>(goaTemples);
+
+  useEffect(() => {
+    let isMounted = true;
+    fetch(`${API_BASE_URL}/destinations/category/Temple`)
+      .then(res => res.ok ? res.json() : [])
+      .then((data: any[]) => {
+        if (isMounted && Array.isArray(data) && data.length > 0) {
+          const mappedData = data.map(d => ({
+            ...d,
+            image: d.image_url || d.image,
+            location: d.details?.location || d.location || 'Goa'
+          }));
+          setRealtimeItems(prev => {
+            const existingIds = new Set(prev.map(p => String(p.id)));
+            const newItems = mappedData.filter(item => !existingIds.has(String(item.id)));
+            return [...prev, ...newItems];
+          });
+        }
+      })
+      .catch(() => {});
+    return () => { isMounted = false; };
+  }, []);
+
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
 
   const toggleWishlist = (e: React.MouseEvent, temple: any) => {
@@ -21,7 +47,7 @@ const TempleList: React.FC<TempleListProps> = ({ selectedRegion = 'all' }) => {
     }
   };
 
-  const filteredTemples = goaTemples.filter(temple =>
+  const filteredTemples = realtimeItems.filter(temple =>
     selectedRegion === 'all' || temple.region === selectedRegion
   );
 

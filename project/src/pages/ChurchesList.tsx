@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../config';
 import { Link } from 'react-router-dom';
 import { MapPin, Heart } from 'lucide-react';
 import { useWishlist } from '../context/WishlistContext';
@@ -10,6 +11,31 @@ interface ChurchesListProps {
 }
 
 const ChurchesList: React.FC<ChurchesListProps> = ({ selectedRegion = 'all' }) => {
+
+  const [realtimeItems, setRealtimeItems] = useState<any[]>(goaChurches);
+
+  useEffect(() => {
+    let isMounted = true;
+    fetch(`${API_BASE_URL}/destinations/category/Church`)
+      .then(res => res.ok ? res.json() : [])
+      .then((data: any[]) => {
+        if (isMounted && Array.isArray(data) && data.length > 0) {
+          const mappedData = data.map(d => ({
+            ...d,
+            image: d.image_url || d.image,
+            location: d.details?.location || d.location || 'Goa'
+          }));
+          setRealtimeItems(prev => {
+            const existingIds = new Set(prev.map(p => String(p.id)));
+            const newItems = mappedData.filter(item => !existingIds.has(String(item.id)));
+            return [...prev, ...newItems];
+          });
+        }
+      })
+      .catch(() => {});
+    return () => { isMounted = false; };
+  }, []);
+
     const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
 
     const toggleWishlist = (e: React.MouseEvent, church: any) => {
@@ -22,7 +48,7 @@ const ChurchesList: React.FC<ChurchesListProps> = ({ selectedRegion = 'all' }) =
         }
     };
 
-    const filteredChurches = goaChurches.filter(church =>
+    const filteredChurches = realtimeItems.filter(church =>
         selectedRegion === 'all' || church.region === selectedRegion
     );
 
