@@ -43,77 +43,89 @@ const generateFallbackItinerary = (daysNum: number, budgetStr: string, interests
   const naturePool = goaWaterfalls.length > 0 ? goaWaterfalls : goaBeaches;
   const foodPool = goaNightlife.filter(n => n.type === 'Restaurant & Bar');
 
-  // Diverse templates covering all aspects of Goa
-  const dailyTemplates = [
-    {
-      theme: 'North Goa Coastal Beach & Watersports Vibe',
-      morning: beachesPool[0] || { id: 'beach-1', name: 'Calangute Beach', description: 'Lively beach famous for water sports, golden sand, and beach shacks.' },
-      afternoon: foodPool[0] || { id: 'rest-1', name: 'Thalassa Greek Restaurant (Siolim)', description: 'Spectacular cliffside dining with Mediterranean mezze.' },
-      evening: nightlifePool[0] || { id: 'titos-baga', name: "Tito's Nightclub (Baga)", description: 'Goa\'s legendary party venue with live DJs and open-air bar.' }
-    },
-    {
-      theme: 'UNESCO Heritage, Old Goa Churches & Culture',
-      morning: heritagePool[0] || { id: 'church-1', name: 'Basilica of Bom Jesus & Se Cathedral', description: '16th-century UNESCO World Heritage architectural marvel in Old Goa.' },
-      afternoon: foodPool[1] || { id: 'rest-6', name: "Mum's Kitchen (Panaji)", description: 'Preserving authentic Goan family recipes and traditional fish curry.' },
-      evening: nightlifePool[1] || { id: 'premium-casino-1', name: 'Deltin Royale Floating Casino', description: 'Luxurious 24/7 offshore gaming & live shows on Mandovi River.' }
-    },
-    {
-      theme: 'Jungle Safaris, Dudhsagar Waterfalls & Spice Trails',
-      morning: naturePool[0] || { id: 'waterfall-1', name: 'Dudhsagar Waterfalls & Spice Plantation', description: 'Majestic 4-tiered waterfall nestled deep inside Mollem National Park.' },
-      afternoon: foodPool[2] || { id: 'rest-2', name: "Martin's Corner (Betalbatim)", description: 'Famous South Goan seafood institution with live acoustic tunes.' },
-      evening: nightlifePool[2] || { id: 'curlies-beach-shack', name: 'Curlies Beach Shack (Anjuna)', description: 'Iconic beachfront venue for sunset views, seafood, and music.' }
-    },
-    {
-      theme: 'South Goa Serenity & Pristine Palm Bays',
-      morning: beachesPool[1] || { id: 'beach-3', name: 'Palolem Beach & Butterfly Island', description: 'Crescent-shaped paradise bay with calm waters and island kayaking.' },
-      afternoon: foodPool[3] || { id: 'rest-3', name: "Fisherman's Wharf (Cavelossim)", description: 'Riverside dining along the Sal River with fusion Goan flavors.' },
-      evening: nightlifePool[3] || { id: 'silent-noise-club', name: 'Silent Noise Club (Palolem)', description: 'Multi-channel wireless headphone party right by the ocean.' }
-    },
-    {
-      theme: 'Vagator Cliffs, Latin Quarter & Sunset Lounging',
-      morning: heritagePool[1] || { id: 'temple-1', name: 'Fontainhas Latin Quarter & Shanta Durga Temple', description: 'Colorful Portuguese colonial streets and serene Hindu architecture.' },
-      afternoon: foodPool[4] || { id: 'rest-4', name: 'Gunpowder (Assagao)', description: 'Peninsular South Indian gourmet dining in a renovated heritage home.' },
-      evening: nightlifePool[4] || { id: 'club-lpk', name: 'Club LPK (Waterfront Candolim)', description: 'Riverside nightclub surrounded by terracotta statues and historic backdrop.' }
+  const getPoolForInterest = (interest: string) => {
+    switch (interest) {
+      case 'beaches': return beachesPool;
+      case 'nightlife': return nightlifePool;
+      case 'history': return heritagePool;
+      case 'adventure': return beachesPool; 
+      case 'food': return foodPool;
+      case 'spiritual': return heritagePool;
+      case 'nature': return naturePool;
+      default: return beachesPool;
     }
-  ];
+  };
+
+  const selected = interestsList.length > 0 ? interestsList : ['beaches', 'food', 'nightlife'];
 
   return Array.from({ length: daysNum }).map((_, i) => {
-    const template = dailyTemplates[i % dailyTemplates.length];
     const dayNum = i + 1;
+    
+    const morningInterest = selected[i % selected.length];
+    const afternoonInterest = selected[(i + 1) % selected.length];
+    const eveningInterest = selected[(i + 2) % selected.length];
+
+    const morningPool = getPoolForInterest(morningInterest);
+    const afternoonPool = getPoolForInterest(afternoonInterest);
+    const eveningPool = getPoolForInterest(eveningInterest);
+
+    const morningItem = morningPool[i % morningPool.length] || beachesPool[0];
+    const afternoonItem = afternoonPool[(i + 1) % afternoonPool.length] || foodPool[0];
+    const eveningItem = eveningPool[(i + 2) % eveningPool.length] || nightlifePool[0];
+
+    const titleMap: Record<string, string> = {
+      beaches: 'Coastal Vibes',
+      nightlife: 'Party Night',
+      history: 'Heritage Walk',
+      adventure: 'Thrill Seekers',
+      food: 'Culinary Delight',
+      spiritual: 'Spiritual Journey',
+      nature: 'Nature Escape'
+    };
+
+    const theme = `${titleMap[morningInterest] || 'Goan'} & ${titleMap[afternoonInterest] || 'Explore'} Experience`;
+
+    const getCategory = (item: any, interest: string) => {
+      if (interest === 'beaches') return 'beach';
+      if (interest === 'nature') return 'waterfall';
+      if (item?.type === 'Church') return 'church';
+      if (item?.type === 'Temple') return 'temple';
+      return 'place';
+    };
 
     return {
       day: dayNum,
-      title: `Day ${dayNum}: ${template.theme}`,
+      title: `Day ${dayNum}: ${theme}`,
       activities: [
         {
           time: '09:00 AM - 12:30 PM',
-          place: template.morning.name || template.morning.title,
-          description: template.morning.description || 'Explore scenic landscapes and vibrant Goan culture.',
-          budget: '₹300 - ₹800',
-          distance: '5 km from hotel',
+          place: morningItem.name || morningItem.title,
+          description: morningItem.description || `Enjoy the best of Goa's ${morningInterest}.`,
+          budget: budgetStr.includes('USD') ? '$10 - $25' : '₹500 - ₹1500',
+          distance: '5 km from stay',
           type: 'internal',
-          placeId: template.morning.id,
-          placeCategory: 'place'
+          placeId: morningItem.id,
+          placeCategory: getCategory(morningItem, morningInterest)
         },
         {
           time: '01:00 PM - 04:00 PM',
-          place: template.afternoon.name || template.afternoon.title,
-          description: template.afternoon.description || 'Enjoy authentic Goan fish curry, refreshing drinks, and local dining.',
-          budget: '₹800 - ₹1500',
+          place: afternoonItem.name || afternoonItem.title,
+          description: afternoonItem.description || `Relax and experience Goan ${afternoonInterest}.`,
+          budget: budgetStr.includes('USD') ? '$15 - $35' : '₹800 - ₹2500',
           distance: '8 km from morning spot',
           type: 'internal',
-          placeId: template.afternoon.id,
-          placeCategory: 'place'
+          placeId: afternoonItem.id,
+          placeCategory: getCategory(afternoonItem, afternoonInterest)
         },
         {
           time: '05:00 PM - 10:00 PM',
-          place: template.evening.name || template.evening.title,
-          description: template.evening.description || 'Unwind with ocean sunset views, cocktails, and night vibe.',
-          budget: '₹500 - ₹2000',
-          distance: '6 km from lunch spot',
+          place: eveningItem.name || eveningItem.title,
+          description: eveningItem.description || `Unwind with Goa's vibrant ${eveningInterest}.`,
+          budget: budgetStr.includes('USD') ? '$20 - $50' : '₹1000 - ₹3000',
+          distance: '6 km from afternoon spot',
           type: 'internal',
-          placeId: template.evening.id,
-          placeCategory: 'place'
+          placeId: eveningItem.id,
+          placeCategory: getCategory(eveningItem, eveningInterest)
         }
       ]
     };
