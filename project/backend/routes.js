@@ -1,3 +1,4 @@
+const fs = require('fs');
 const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
@@ -18,11 +19,46 @@ const razorpay = new Razorpay({
 
 const jwtSecret = process.env.JWT_SECRET || 's3cr3tK3y!@';
 
-// In-Memory User Fallback Store (Ensures Login & Signup work seamlessly even when DB is unreachable)
-const bookingsMemoryStore = [];
-const rentalsMemoryStore = [];
+// Fallback Store Implementation
+const fallbackFile = path.join(__dirname, 'fallback_data.json');
 
-const usersMemoryStore = [
+let bookingsMemoryStore = [];
+let rentalsMemoryStore = [];
+let usersMemoryStore = [];
+
+// Load Fallback Data
+try {
+  if (fs.existsSync(fallbackFile)) {
+    const data = JSON.parse(fs.readFileSync(fallbackFile, 'utf8'));
+    if (data.usersMemoryStore) usersMemoryStore = data.usersMemoryStore;
+    if (data.bookingsMemoryStore) bookingsMemoryStore = data.bookingsMemoryStore;
+    if (data.rentalsMemoryStore) rentalsMemoryStore = data.rentalsMemoryStore;
+    console.log('[Fallback] Loaded fallback data from fallback_data.json');
+  }
+} catch (e) {
+  console.error('[Fallback] Failed to load fallback data:', e.message);
+}
+
+// Function to save fallback data
+function saveFallbackData() {
+  try {
+    const data = {
+      usersMemoryStore,
+      bookingsMemoryStore,
+      rentalsMemoryStore
+    };
+    fs.writeFileSync(fallbackFile, JSON.stringify(data, null, 2), 'utf8');
+  } catch (e) {
+    console.error('[Fallback] Failed to save fallback data:', e.message);
+  }
+}
+
+// Expose globally or at least in module scope so it's accessible
+global.saveFallbackData = saveFallbackData;
+
+// Seed initial fallback data if empty
+if (usersMemoryStore.length === 0) {
+  usersMemoryStore.push(...[
   {
     id: 1,
     full_name: 'System Administrator',
@@ -59,8 +95,8 @@ const usersMemoryStore = [
     has_premium_access: 1,
     created_at: new Date().toISOString()
   }
-];
-
+]);
+}
 (async () => {
   try {
     const adminHash = await bcrypt.hash('admin123', 10);
@@ -355,7 +391,6 @@ router.post('/forgot-password', async (req, res) => {
   } catch (error) {
     console.error('Forgot Password error:', error);
     console.warn('[Global DB Fallback Captured 500]');
-    if (req && req.method === 'GET') { return res.json([]); } else { return res.status(200).json({ success: true, message: 'Action processed (Memory Fallback)', fake: true }); }
   }
 });
 
@@ -1430,12 +1465,28 @@ router.post('/payments/verify', authenticateToken, async (req, res) => {
 
     conn.release();
     res.json({ success: true, message: 'Payment verified and booking confirmed successfully!' });
-  } catch (error) {
-    console.error('Payment verification error:', error);
-    console.warn('[Global DB Fallback Captured 500]');
-    if (req && req.method === 'GET') { return res.json([]); } else { return res.status(200).json({ success: true, message: 'Action processed (Memory Fallback)', fake: true }); }
+    } catch (error) {
+    console.warn('[DB Fallback] Payment verify using memory store:', error.message);
+    const bookingIndex = bookingsMemoryStore.findIndex(b => b.id == bookingId || b.id === bookingId);
+    if (bookingIndex === -1) return res.status(404).json({ message: 'Booking not found' });
+    
+    bookingsMemoryStore[bookingIndex].status = 'confirmed';
+    if (typeof saveFallbackData === 'function') saveFallbackData();
+    
+    const memUser = usersMemoryStore.find(u => u.id == req.user.userId) || { full_name: 'Customer', email: req.user.email || '' };
+    
+    const bookingDetails = {
+      booking_date: bookingsMemoryStore[bookingIndex].booking_date,
+      guests: bookingsMemoryStore[bookingIndex].guests || 1,
+      total_price: bookingsMemoryStore[bookingIndex].total_price
+    };
+    const tourDetails = { title: bookingsMemoryStore[bookingIndex].booked_tour_title };
+    
+    emailService.sendBookingConfirmation(bookingDetails, tourDetails, memUser).catch(() => {});
+    return res.json({ success: true, message: 'Payment verified and booking confirmed (Memory Fallback)' });
   }
 });
+
 
 // Get user bookings (protected)
 router.get('/bookings', authenticateToken, async (req, res) => {
@@ -1500,7 +1551,7 @@ router.put('/bookings/:id/cancel', authenticateToken, async (req, res) => {
     const booking = bookingsMemoryStore.find(b => String(b.id) === String(bookingId));
     if (booking) {
       if (booking.status === 'cancelled') return res.status(400).json({ message: 'Booking already cancelled' });
-      booking.status = 'cancelled';
+      booking.status = 'cancelled'; if (typeof saveFallbackData === 'function') saveFallbackData();
       return res.json({ message: 'Booking cancelled successfully (Memory Fallback)' });
     }
     return res.status(404).json({ message: 'Booking not found' });
@@ -3027,6 +3078,36 @@ router.post('/events/sync', async (req, res) => {
   }
 });
 
+
+// Cancel Booking Endpoint
+router.post('/bookings/:id/cancel', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const conn = await pool.getConnection();
+    await conn.execute('UPDATE bookings SET status = ? WHERE id = ?', ['cancelled', id]);
+    conn.release();
+    
+    // Also update in memory store
+    const bookingIndex = bookingsMemoryStore.findIndex(b => String(b.id) === String(id));
+    if (bookingIndex !== -1) {
+      bookingsMemoryStore[bookingIndex].status = 'cancelled';
+      if (typeof saveFallbackData === 'function') saveFallbackData();
+    }
+    
+    res.json({ message: 'Booking cancelled successfully' });
+  } catch (error) {
+    console.error('Cancel booking error, falling back:', error.message);
+    const { id } = req.params;
+    const bookingIndex = bookingsMemoryStore.findIndex(b => String(b.id) === String(id));
+    if (bookingIndex !== -1) {
+      bookingsMemoryStore[bookingIndex].status = 'cancelled';
+      if (typeof saveFallbackData === 'function') saveFallbackData();
+      return res.json({ message: 'Booking cancelled successfully (offline mode)' });
+    }
+    res.status(500).json({ message: 'Failed to cancel booking' });
+  }
+});
+
 module.exports = router;
 // --- CONTACT & MESSAGES ---
 
@@ -3451,8 +3532,8 @@ out body 300;`;
       const lowercaseName = name.toLowerCase();
       
       // Determine Type and Category Key
-      let friendlyType = 'Bar';
-      let catKey = 'clubs';
+      let friendlyType = 'Place';
+      let catKey = 'other';
       
       if (tags.tourism === 'hotel') { friendlyType = 'Hotel'; catKey = 'hotels'; }
       else if (tags.tourism === 'resort') { friendlyType = 'Resort'; catKey = 'hotels'; }
@@ -3466,6 +3547,15 @@ out body 300;`;
       else if (tags.amenity === 'cafe') { friendlyType = 'Cafe'; catKey = 'cafes'; }
       else if (tags.amenity === 'bar') { friendlyType = 'Bar'; catKey = 'clubs'; }
       else if (tags.amenity === 'pub') { friendlyType = 'Pub'; catKey = 'clubs'; }
+      else if (tags.natural === 'beach' || lowercaseName.includes('beach')) { friendlyType = 'Beach'; catKey = 'beaches'; }
+      else if (tags.amenity === 'place_of_worship') {
+         if (tags.religion === 'hindu') { friendlyType = 'Temple'; catKey = 'temples'; }
+         else if (tags.religion === 'christian') { friendlyType = 'Church'; catKey = 'churches'; }
+         else { friendlyType = 'Place of Worship'; catKey = 'culture'; }
+      }
+      else if (tags.waterway === 'waterfall') { friendlyType = 'Waterfall'; catKey = 'waterfalls'; }
+      else if (tags.historic === 'ruins' || tags.historic === 'monument') { friendlyType = 'Authentic'; catKey = 'authentic'; }
+      else if (tags.tourism === 'museum' || tags.amenity === 'arts_centre') { friendlyType = 'Culture'; catKey = 'culture'; }
       else if (tags.tourism) { friendlyType = tags.tourism.charAt(0).toUpperCase() + tags.tourism.slice(1); catKey = 'hotels'; }
       else if (tags.amenity) { friendlyType = tags.amenity.charAt(0).toUpperCase() + tags.amenity.slice(1); }
 
@@ -3823,6 +3913,18 @@ out body 300;`;
           conditions.push("type IN ('Bar', 'Pub', 'Nightclub', 'Beach Shack')");
         } else if (category === 'casinos') {
           conditions.push("type = 'Casino'");
+        } else if (category === 'beaches') {
+          conditions.push("type = 'Beach'");
+        } else if (category === 'temples') {
+          conditions.push("type = 'Temple'");
+        } else if (category === 'churches') {
+          conditions.push("type = 'Church'");
+        } else if (category === 'waterfalls') {
+          conditions.push("type = 'Waterfall'");
+        } else if (category === 'authentic') {
+          conditions.push("type = 'Authentic'");
+        } else if (category === 'culture') {
+          conditions.push("type = 'Culture'");
         }
       }
       if (region && region !== 'all') {
