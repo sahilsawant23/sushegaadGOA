@@ -3396,31 +3396,17 @@ router.get('/realtime/places', async (req, res) => {
   ];
 
   const categoryMap = {
-    hotels: [
-      'node["tourism"="hotel"]',
-      'node["tourism"="guest_house"]',
-      'node["tourism"="resort"]',
-      'node["tourism"="hostel"]'
-    ],
-    restaurants: [
-      'node["amenity"="restaurant"]',
-      'node["amenity"="food_court"]'
-    ],
-    cafes: [
-      'node["amenity"="cafe"]'
-    ],
-    clubs: [
-      'node["amenity"="nightclub"]',
-      'node["amenity"="bar"]',
-      'node["amenity"="pub"]',
-      'node["restaurant"="beach_shack"]',
-      'node["beach_shack"="yes"]',
-      'node["bar"="yes"]'
-    ],
-    casinos: [
-      'node["amenity"="casino"]',
-      'node["leisure"="casino"]'
-    ]
+    hotels: ['node["tourism"="hotel"]', 'node["tourism"="guest_house"]', 'node["tourism"="resort"]', 'node["tourism"="hostel"]'],
+    restaurants: ['node["amenity"="restaurant"]', 'node["amenity"="food_court"]'],
+    cafes: ['node["amenity"="cafe"]'],
+    clubs: ['node["amenity"="nightclub"]', 'node["amenity"="bar"]', 'node["amenity"="pub"]', 'node["restaurant"="beach_shack"]', 'node["beach_shack"="yes"]', 'node["bar"="yes"]'],
+    casinos: ['node["amenity"="casino"]', 'node["leisure"="casino"]'],
+    beaches: ['node["natural"="beach"]'],
+    temples: ['node["amenity"="place_of_worship"]["religion"="hindu"]'],
+    churches: ['node["amenity"="place_of_worship"]["religion"="christian"]'],
+    waterfalls: ['node["waterway"="waterfall"]'],
+    authentic: ['node["historic"="ruins"]', 'node["historic"="monument"]'],
+    culture: ['node["tourism"="museum"]', 'node["amenity"="arts_centre"]']
   };
 
   let typeClauses = [];

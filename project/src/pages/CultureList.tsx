@@ -11,7 +11,7 @@ const CultureList: React.FC = () => {
 
   useEffect(() => {
     let isMounted = true;
-    fetch(`${API_BASE_URL}/destinations/category/Culture`)
+    fetch(`${API_BASE_URL}/realtime/places?category=culture`)
       .then(res => res.ok ? res.json() : [])
       .then((data: any[]) => {
         if (isMounted && Array.isArray(data) && data.length > 0) {

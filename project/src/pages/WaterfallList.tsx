@@ -15,7 +15,7 @@ const WaterfallList: React.FC<WaterfallListProps> = ({ selectedRegion = 'all' })
 
   useEffect(() => {
     let isMounted = true;
-    fetch(`${API_BASE_URL}/destinations/category/Waterfall`)
+    fetch(`${API_BASE_URL}/realtime/places?category=waterfalls`)
       .then(res => res.ok ? res.json() : [])
       .then((data: any[]) => {
         if (isMounted && Array.isArray(data) && data.length > 0) {

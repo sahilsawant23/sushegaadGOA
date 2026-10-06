@@ -11,7 +11,7 @@ const AuthenticList: React.FC = () => {
 
   useEffect(() => {
     let isMounted = true;
-    fetch(`${API_BASE_URL}/destinations/category/Authentic`)
+    fetch(`${API_BASE_URL}/realtime/places?category=authentic`)
       .then(res => res.ok ? res.json() : [])
       .then((data: any[]) => {
         if (isMounted && Array.isArray(data) && data.length > 0) {

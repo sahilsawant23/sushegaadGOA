@@ -16,7 +16,7 @@ const ChurchesList: React.FC<ChurchesListProps> = ({ selectedRegion = 'all' }) =
 
   useEffect(() => {
     let isMounted = true;
-    fetch(`${API_BASE_URL}/destinations/category/Church`)
+    fetch(`${API_BASE_URL}/realtime/places?category=churches`)
       .then(res => res.ok ? res.json() : [])
       .then((data: any[]) => {
         if (isMounted && Array.isArray(data) && data.length > 0) {

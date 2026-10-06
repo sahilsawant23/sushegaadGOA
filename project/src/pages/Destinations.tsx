@@ -41,7 +41,7 @@ const Destinations: React.FC = () => {
 
   useEffect(() => {
     let isMounted = true;
-    fetch(`${API_BASE_URL}/realtime/places`)
+    fetch(`${API_BASE_URL}/realtime/places?category=beaches`)
       .then(res => res.ok ? res.json() : [])
       .then((data: any[]) => {
         if (isMounted && Array.isArray(data) && data.length > 0) {
